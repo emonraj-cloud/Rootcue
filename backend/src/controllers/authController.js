@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import pool from '../config/database.js'
+import { ensureDefaultCatalog } from '../services/defaultCatalog.js'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -43,6 +44,16 @@ export async function register(req, res) {
     )
 
     const user = result.rows[0]
+
+    // Give the new workspace the default provider/model/tool catalog. Without
+    // it the Create Agent wizard has nothing to offer, because providers,
+    // models and tools are all scoped to the workspace.
+    try {
+      await ensureDefaultCatalog(workspaceId)
+    } catch (catalogErr) {
+      console.error('Default catalog setup failed:', catalogErr.message)
+    }
+
     const token = generateToken(user.id)
 
     res.status(201).json({ success: true, user, token })

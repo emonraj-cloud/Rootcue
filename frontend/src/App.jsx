@@ -10,6 +10,8 @@ import Agents from './pages/Agents.jsx'
 import AgentDetail from './pages/AgentDetail.jsx'
 import CreateAgent from './pages/CreateAgent.jsx'
 import Workflows from './pages/Workflows.jsx'
+import WorkflowCreate from './pages/WorkflowCreate.jsx'
+import WorkflowDetail from './pages/WorkflowDetail.jsx'
 import Knowledge from './pages/Knowledge.jsx'
 import Tools from './pages/Tools.jsx'
 import Providers from './pages/Providers.jsx'
@@ -51,6 +53,8 @@ function App() {
               <Route path="/agents/create" element={<CreateAgent />} />
               <Route path="/agents/:id" element={<AgentDetail />} />
               <Route path="/workflows" element={<Workflows />} />
+              <Route path="/workflows/create" element={<WorkflowCreate />} />
+              <Route path="/workflows/:id" element={<WorkflowDetail />} />
               <Route path="/knowledge" element={<Knowledge />} />
               <Route path="/tools" element={<Tools />} />
               <Route path="/providers" element={<Providers />} />

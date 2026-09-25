@@ -2,7 +2,26 @@ import { useRef, useState, useCallback, useEffect } from 'react'
 import { api } from '../api/client.js'
 import DiagnosisResultView from '../components/DiagnosisResultView.jsx'
 
-const MAX_IMAGE_BYTES = 10 * 1024 * 1024 // matches backend limit (10 MB)
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024 // matches visualUploadMiddleware on the backend
+const ACCEPTED = 'image/png,image/jpeg,image/jpg,image/webp,image/gif,image/bmp'
+
+function formatBytes(bytes) {
+  if (!bytes) return '0 KB'
+  const kb = bytes / 1024
+  if (kb < 1024) return `${Math.round(kb)} KB`
+  return `${(kb / 1024).toFixed(1)} MB`
+}
+
+function validateFile(selected) {
+  if (!selected) return 'No file was selected.'
+  if (!selected.type.startsWith('image/')) {
+    return 'That is not an image. Upload a screenshot (PNG, JPG, WebP or GIF).'
+  }
+  if (selected.size > MAX_IMAGE_BYTES) {
+    return `That image is ${formatBytes(selected.size)}. The maximum size is 10 MB.`
+  }
+  return ''
+}
 
 export default function VisualDiagnose() {
   const [file, setFile] = useState(null)
@@ -12,39 +31,34 @@ export default function VisualDiagnose() {
   const [result, setResult] = useState(null)
   const [dragActive, setDragActive] = useState(false)
   const fileInputRef = useRef(null)
-  const dropZoneRef = useRef(null)
+  const dragDepth = useRef(0)
+
+  // Object URLs leak until they are revoked, and this page can be re-entered
+  // many times in a session, so tie the lifetime of each preview to the file.
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl)
+    }
+  }, [previewUrl])
+
+  const processFile = useCallback((selected) => {
+    const problem = validateFile(selected)
+    setResult(null)
+    setError(problem)
+    if (problem) {
+      setFile(null)
+      setPreviewUrl('')
+      return
+    }
+    setFile(selected)
+    setPreviewUrl((old) => {
+      if (old) URL.revokeObjectURL(old)
+      return URL.createObjectURL(selected)
+    })
+  }, [])
 
   function handleFileChange(e) {
-    const selected = e.target.files && e.target.files[0]
-    processFile(selected)
-  }
-
-  function processFile(selected) {
-    setError('')
-    setResult(null)
-
-    if (!selected) {
-      setFile(null)
-      setPreviewUrl('')
-      return
-    }
-
-    if (!selected.type.startsWith('image/')) {
-      setError('Please choose an image file (PNG, JPG, WebP, ...).')
-      setFile(null)
-      setPreviewUrl('')
-      return
-    }
-
-    if (selected.size > MAX_IMAGE_BYTES) {
-      setError('That image is too large. The maximum size is 10 MB.')
-      setFile(null)
-      setPreviewUrl('')
-      return
-    }
-
-    setFile(selected)
-    setPreviewUrl(URL.createObjectURL(selected))
+    processFile(e.target.files && e.target.files[0])
   }
 
   function handleClear() {
@@ -52,35 +66,54 @@ export default function VisualDiagnose() {
     setPreviewUrl('')
     setResult(null)
     setError('')
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
-  function handleDrag(e) {
+  // dragenter/dragleave fire for every child element, so a naive toggle makes
+  // the zone flicker. Counting enter/leave pairs keeps the highlight stable.
+  function handleDragEnter(e) {
     e.preventDefault()
     e.stopPropagation()
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true)
-    } else if (e.type === 'dragleave') {
-      setDragActive(false)
-    }
+    dragDepth.current += 1
+    setDragActive(true)
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(true)
+  }
+
+  function handleDragLeave(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    dragDepth.current = Math.max(0, dragDepth.current - 1)
+    if (dragDepth.current === 0) setDragActive(false)
   }
 
   function handleDrop(e) {
     e.preventDefault()
     e.stopPropagation()
+    dragDepth.current = 0
     setDragActive(false)
+    processFile(e.dataTransfer.files && e.dataTransfer.files[0])
+  }
 
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      processFile(e.dataTransfer.files[0])
+  function openPicker() {
+    fileInputRef.current?.click()
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      openPicker()
     }
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
     if (!file) {
-      setError('Please choose a screenshot first.')
+      setError('Choose a screenshot first.')
       return
     }
 
@@ -94,17 +127,16 @@ export default function VisualDiagnose() {
       const data = await api.postForm('/api/agents/visual', formData)
       setResult(data.result)
     } catch (err) {
-      setError(err.message)
+      setError(err.message || 'Failed to analyze the screenshot')
     } finally {
       setLoading(false)
     }
   }
 
-  // Handle clipboard paste
+  // Paste a screenshot straight from the clipboard.
   useEffect(() => {
-    const handlePaste = async (e) => {
-      if (loading || result) return // don't interfere if analyzing or showing result
-
+    function handlePaste(e) {
+      if (loading || result) return
       const items = e.clipboardData?.items
       if (!items) return
 
@@ -122,66 +154,104 @@ export default function VisualDiagnose() {
 
     window.addEventListener('paste', handlePaste)
     return () => window.removeEventListener('paste', handlePaste)
-  }, [loading, result])
+  }, [loading, result, processFile])
 
   return (
-    <div>
-      <h2>Visual Diagnosis</h2>
-      <p className="visual-hint">
-        Upload a screenshot of the error or problem. Drag & drop, paste (Ctrl+V), or click to browse.
-        The AI vision model will analyze the image and tell you what is wrong and how to fix it.
-      </p>
+    <div className="vd-page">
+      <div className="vd-header">
+        <div className="vd-header-icon">
+          <i className="fa-solid fa-eye"></i>
+        </div>
+        <div>
+          <h1 className="vd-title">Visual Diagnose</h1>
+          <p className="vd-subtitle">
+            Upload a screenshot of an error or a broken screen. The vision model reads it and
+            describes the problem, the likely root cause and how to fix it.
+          </p>
+        </div>
+      </div>
 
-      <form className="diagnose-form" onSubmit={handleSubmit}>
-        <label>
-          Screenshot (PNG, JPG, WebP — max 10 MB)
-          <div
-            ref={dropZoneRef}
-            className={`visual-dropzone ${dragActive ? 'active' : ''} ${file ? 'has-file' : ''}`}
-            onDragEnter={handleDrag}
-            onDragOver={handleDrag}
-            onDragLeave={handleDrag}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInputRef.current?.click(); } }}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              style={{ display: 'none' }}
-            />
-            {file && previewUrl ? (
-              <img src={previewUrl} alt="Selected screenshot preview" className="visual-preview" />
-            ) : (
-              <div className="dropzone-content">
-                <span className="dropzone-icon">📷</span>
-                <span className="dropzone-text">Drag & drop screenshot here</span>
-                <span className="dropzone-hint">or click to browse • paste with Ctrl+V</span>
+      <form onSubmit={handleSubmit}>
+        <div
+          className={`vd-dropzone ${dragActive ? 'active' : ''} ${file ? 'has-file' : ''}`}
+          onDragEnter={handleDragEnter}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={file ? undefined : openPicker}
+          onKeyDown={handleKeyDown}
+          role="button"
+          tabIndex={0}
+          aria-label="Upload a screenshot"
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={ACCEPTED}
+            onChange={handleFileChange}
+            className="vd-file-input"
+          />
+
+          {file && previewUrl ? (
+            <div className="vd-preview-wrap">
+              <img src={previewUrl} alt="Selected screenshot preview" className="vd-preview" />
+              <div className="vd-file-meta">
+                <div className="vd-file-name">{file.name}</div>
+                <div className="vd-file-size">{formatBytes(file.size)}</div>
               </div>
-            )}
-          </div>
-        </label>
+            </div>
+          ) : (
+            <div className="vd-empty">
+              <i className="fa-solid fa-cloud-arrow-up vd-empty-icon"></i>
+              <div className="vd-empty-title">Drag &amp; drop a screenshot here</div>
+              <div className="vd-empty-hint">
+                or click to browse &middot; paste with Ctrl+V &middot; PNG, JPG, WebP, GIF up to 10 MB
+              </div>
+            </div>
+          )}
+        </div>
 
-        {file && previewUrl && (
-          <div className="visual-buttons">
-            <button type="submit" disabled={loading || !file}>
-              {loading ? 'Analyzing screenshot (this can take a while)...' : 'Analyze Screenshot'}
+        {file && (
+          <div className="vd-actions">
+            <button type="submit" className="vd-btn-primary" disabled={loading}>
+              {loading ? (
+                <>
+                  <i className="fa-solid fa-circle-notch fa-spin"></i>
+                  Analyzing screenshot...
+                </>
+              ) : (
+                <>
+                  <i className="fa-solid fa-magnifying-glass-chart"></i>
+                  Analyze Screenshot
+                </>
+              )}
             </button>
-            <button type="button" className="visual-clear-btn" onClick={handleClear} disabled={loading}>
+            <button type="button" className="vd-btn-ghost" onClick={handleClear} disabled={loading}>
+              <i className="fa-solid fa-rotate-left"></i>
               Clear
             </button>
           </div>
         )}
       </form>
 
-      {error && <div className="error-banner">{error}</div>}
+      {error && (
+        <div className="vd-error">
+          <i className="fa-solid fa-circle-exclamation"></i>
+          {error}
+        </div>
+      )}
+
+      {loading && (
+        <div className="vd-thinking">
+          <div className="vd-thinking-bar"></div>
+          <p className="vd-thinking-text">
+            The vision model is reading the screenshot. A first run can take a minute while the
+            model loads.
+          </p>
+        </div>
+      )}
 
       {result && <DiagnosisResultView result={result} />}
     </div>
   )
 }
-

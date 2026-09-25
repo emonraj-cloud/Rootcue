@@ -17,6 +17,17 @@ const PROVIDER_ICON = {
   azure: 'fa-cloud'
 }
 
+const TOOL_ICON = {
+  web: 'fa-globe',
+  database: 'fa-database',
+  files: 'fa-folder-open',
+  communication: 'fa-envelope',
+  developer: 'fa-code',
+  productivity: 'fa-calendar',
+  business: 'fa-calculator',
+  ai: 'fa-wand-magic-sparkles'
+}
+
 const EMPTY_FORM = {
   name: '',
   description: '',
@@ -289,54 +300,62 @@ export default function CreateAgent() {
               <div className="wz-field">
                 <div className="wz-label">
                   <span>Provider</span>
-                  <span className="wz-hint">{providers.length} available</span>
+                  <span className="wz-hint">
+                    {providers.length ? `${providers.length} available` : 'None registered yet'}
+                  </span>
                 </div>
 
-                {providers.length === 0 ? (
-                  <div className="wz-empty">
-                    <i className="fa-solid fa-plug-circle-bolt"></i>
-                    <div className="wz-empty-title">No providers configured</div>
-                    <div className="wz-empty-desc">Add one from the Providers page to use a model here.</div>
-                  </div>
-                ) : (
-                  <div className="wz-options">
-                    <label className={`wz-option ${formData.provider === '' ? 'selected' : ''}`}>
+                {/* The platform default is always offered: the runtime reads its
+                    model from OLLAMA_MODEL, so an agent works even when no
+                    provider or model has been registered. */}
+                <div className="wz-options">
+                  <label className={`wz-option ${formData.provider === '' ? 'selected' : ''}`}>
+                    <input
+                      type="radio"
+                      name="provider"
+                      checked={formData.provider === ''}
+                      onChange={() => handleProviderSelect('')}
+                    />
+                    <div className="wz-option-icon">
+                      <i className="fa-solid fa-inbox"></i>
+                    </div>
+                    <div>
+                      <div className="wz-option-name">Platform default</div>
+                      <div className="wz-option-desc">Use whatever the runtime has configured</div>
+                    </div>
+                  </label>
+
+                  {providers.map((p) => (
+                    <label
+                      key={p.id}
+                      className={`wz-option ${formData.provider === p.name ? 'selected' : ''}`}
+                    >
                       <input
                         type="radio"
                         name="provider"
-                        checked={formData.provider === ''}
-                        onChange={() => handleProviderSelect('')}
+                        checked={formData.provider === p.name}
+                        onChange={() => handleProviderSelect(p.name)}
                       />
                       <div className="wz-option-icon">
-                        <i className="fa-solid fa-inbox"></i>
+                        <i className={`fa-solid ${PROVIDER_ICON[String(p.type || '').toLowerCase()] || 'fa-server'}`}></i>
                       </div>
                       <div>
-                        <div className="wz-option-name">No provider</div>
-                        <div className="wz-option-desc">Use the platform default</div>
+                        <div className="wz-option-name">{p.name}</div>
+                        <div className="wz-option-desc">{p.type || 'provider'}</div>
                       </div>
                     </label>
+                  ))}
+                </div>
 
-                    {providers.map((p) => (
-                      <label
-                        key={p.id}
-                        className={`wz-option ${formData.provider === p.name ? 'selected' : ''}`}
-                      >
-                        <input
-                          type="radio"
-                          name="provider"
-                          checked={formData.provider === p.name}
-                          onChange={() => handleProviderSelect(p.name)}
-                        />
-                        <div className="wz-option-icon">
-                          <i className={`fa-solid ${PROVIDER_ICON[String(p.type || '').toLowerCase()] || 'fa-server'}`}></i>
-                        </div>
-                        <div>
-                          <div className="wz-option-name">{p.name}</div>
-                          <div className="wz-option-desc">{p.type || 'provider'}</div>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
+                {providers.length === 0 && (
+                  <input
+                    type="text"
+                    className="wz-input"
+                    style={{ marginTop: 12 }}
+                    value={formData.provider}
+                    onChange={(e) => handleChange('provider', e.target.value)}
+                    placeholder="Or type a provider name, e.g. ollama"
+                  />
                 )}
               </div>
 
@@ -344,64 +363,64 @@ export default function CreateAgent() {
                 <div className="wz-label">
                   <span>Model</span>
                   <span className="wz-hint">
-                    {availableModels.length} available
-                    {selectedProvider ? ` for ${selectedProvider.name}` : ''}
+                    {availableModels.length
+                      ? `${availableModels.length} available${selectedProvider ? ` for ${selectedProvider.name}` : ''}`
+                      : 'None registered yet'}
                   </span>
                 </div>
 
-                {availableModels.length === 0 ? (
-                  <div className="wz-empty">
-                    <i className="fa-solid fa-cubes"></i>
-                    <div className="wz-empty-title">No models to show</div>
-                    <div className="wz-empty-desc">
-                      {selectedProvider
-                        ? `${selectedProvider.name} has no models yet. Add one from the Models page.`
-                        : 'Register a model first, or continue without one.'}
+                {availableModels.length === 0 && (
+                  <input
+                    type="text"
+                    className="wz-input"
+                    style={{ marginTop: 12 }}
+                    value={formData.model}
+                    onChange={(e) => handleChange('model', e.target.value)}
+                    placeholder="Or type a model name, e.g. gemma4:31b-cloud"
+                  />
+                )}
+
+                <div className="wz-options">
+                  <label className={`wz-option ${formData.model === '' ? 'selected' : ''}`}>
+                    <input
+                      type="radio"
+                      name="model"
+                      checked={formData.model === ''}
+                      onChange={() => handleChange('model', '')}
+                    />
+                    <div className="wz-option-icon">
+                      <i className="fa-solid fa-gauge-high"></i>
                     </div>
-                  </div>
-                ) : (
-                  <div className="wz-options">
-                    <label className={`wz-option ${formData.model === '' ? 'selected' : ''}`}>
+                    <div>
+                      <div className="wz-option-name">Platform default</div>
+                      <div className="wz-option-desc">Let the runtime decide</div>
+                    </div>
+                  </label>
+
+                  {availableModels.map((m) => (
+                    <label
+                      key={m.id}
+                      className={`wz-option ${formData.model === m.name ? 'selected' : ''}`}
+                    >
                       <input
                         type="radio"
                         name="model"
-                        checked={formData.model === ''}
-                        onChange={() => handleChange('model', '')}
+                        checked={formData.model === m.name}
+                        onChange={() => handleChange('model', m.name)}
                       />
                       <div className="wz-option-icon">
-                        <i className="fa-solid fa-gauge-high"></i>
+                        <i className="fa-solid fa-microchip"></i>
                       </div>
                       <div>
-                        <div className="wz-option-name">Platform default</div>
-                        <div className="wz-option-desc">Let the runtime decide</div>
+                        <div className="wz-option-name">{m.name}</div>
+                        <div className="wz-option-desc">
+                          {m.model_identifier || m.type || 'model'}
+                          {m.context_length ? ` · ${Number(m.context_length).toLocaleString()} ctx` : ''}
+                        </div>
                       </div>
                     </label>
-
-                    {availableModels.map((m) => (
-                      <label
-                        key={m.id}
-                        className={`wz-option ${formData.model === m.name ? 'selected' : ''}`}
-                      >
-                        <input
-                          type="radio"
-                          name="model"
-                          checked={formData.model === m.name}
-                          onChange={() => handleChange('model', m.name)}
-                        />
-                        <div className="wz-option-icon">
-                          <i className="fa-solid fa-microchip"></i>
-                        </div>
-                        <div>
-                          <div className="wz-option-name">{m.name}</div>
-                          <div className="wz-option-desc">
-                            {m.model_identifier || m.type || 'model'}
-                            {m.context_length ? ` · ${Number(m.context_length).toLocaleString()} ctx` : ''}
-                          </div>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
-                )}
+                  ))}
+                </div>
               </div>
             </>
           )}
@@ -443,15 +462,17 @@ export default function CreateAgent() {
                   <div className="wz-options">
                     {tools.map((tool) => {
                       const isOn = formData.tools.includes(tool.id)
+                      const category = String(tool.category || 'custom')
                       return (
                         <label key={tool.id} className={`wz-option ${isOn ? 'selected' : ''}`}>
                           <input type="checkbox" checked={isOn} onChange={() => handleToolToggle(tool.id)} />
                           <div className="wz-option-icon">
-                            <i className="fa-solid fa-bolt"></i>
+                            <i className={`fa-solid ${TOOL_ICON[category] || 'fa-screwdriver-wrench'}`}></i>
                           </div>
                           <div>
                             <div className="wz-option-name">{tool.name}</div>
-                            <div className="wz-option-desc">{tool.description || tool.category || 'Tool'}</div>
+                            <div className="wz-option-desc">{tool.description || 'Tool'}</div>
+                            <span className="wz-option-tag">{category}</span>
                           </div>
                         </label>
                       )
