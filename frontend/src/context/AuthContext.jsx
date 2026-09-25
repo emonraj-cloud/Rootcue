@@ -17,7 +17,11 @@ export function AuthProvider({ children }) {
     api
       .get('/api/auth/me')
       .then((data) => setUser(data.user))
-      .catch(() => clearToken())
+      .catch((err) => {
+        // Only a rejected token means the session is really gone. A
+        // network blip or a 5xx must not log the user out.
+        if (err.status === 401) clearToken()
+      })
       .finally(() => setLoading(false))
   }, [])
 
