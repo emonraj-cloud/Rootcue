@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              glass: {
+                bg: 'rgba(30, 41, 59, 0.65)',
+                card: 'rgba(51, 65, 85, 0.55)',
+                border: 'rgba(255, 255, 255, 0.18)',
+                hover: 'rgba(255, 255, 255, 0.25)',
+              }
+            },
+            boxShadow: {
+              '3d-glow': '0 20px 50px -10px rgba(99, 102, 241, 0.3), 0 0 35px 2px rgba(6, 182, 212, 0.2)',
+              'card-depth': '0 15px 35px -5px rgba(15, 23, 42, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.2)',
+              'cyan-glow': '0 0 25px rgba(6, 182, 212, 0.45)'
+            }
+          }
+        }
+      }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <title>NEXORA AI — AI Agent Automation Platform</title>
+  </head>
+  <body class="text-slate-100 flex h-screen overflow-hidden selection:bg-indigo-500 selection:text-white">
+
+    <!-- Ambient Glowing Spheres -->
+    <div class="glow-sphere-1"></div>
+    <div class="glow-sphere-2"></div>
+
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

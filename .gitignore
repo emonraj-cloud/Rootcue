@@ -1,0 +1,22 @@
+**/node_modules
+**/.env
+**/dist
+
+# Python virtualenv
+.venv/
+venv/
+env/
+
+# IDE / editor
+.idea/
+.vscode/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Nested duplicate copy of this project.
+# The real source is at the repository root (./backend, ./frontend).
+# This folder holds a near-identical second copy which only creates drift.
+# Delete it manually if it is no longer needed.
+/techpilot-ai/

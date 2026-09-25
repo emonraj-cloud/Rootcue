@@ -1,0 +1,157 @@
+=========================================================
+FIX-6-7-INSTRUCTIONS-BANGLA.txt
+TECHPILOT AI - Knowledge Scope + File Upload
+=========================================================
+
+এই ZIP-এ FIX-6 এবং FIX-7 একসাথে আছে।
+
+কী হয়েছে:
+1. Knowledge document এখন user-scoped: একজন user নিজের document এবং shared document দেখতে/search করতে পারবে।
+2. Migration 009 knowledge_documents.user_id যোগ করে।
+3. Diagnosis/RAG-এ user ID পাঠানো হচ্ছে।
+4. Knowledge page-এ text/code file upload যোগ হয়েছে।
+5. Supported extensions: .txt .md .log .json .csv .xml .yml .yaml .js .ts .py .java .sql .html .css .sh
+6. Maximum upload size: 2 MB।
+7. Upload করা file memory-তে পড়ে UTF-8 text হিসেবে ingest হবে; NUL byte বাদ যাবে।
+8. প্রতি upload-এ সর্বোচ্চ 500 chunk ingest হবে।
+
+=========================================================
+STEP 1 - BACKUP
+=========================================================
+
+কাজ শুরুর আগে E:\techpilot-ai\techpilot-ai folder-এর backup copy রাখুন।
+বিশেষ করে নিচের affected files-এর backup রাখুন।
+
+=========================================================
+STEP 2 - FILE REPLACE
+=========================================================
+
+ZIP-এর folder structure সরাসরি project root-এর উপর extract/replace করুন:
+
+E:\techpilot-ai\techpilot-ai
+
+এই ZIP-এর files একই relative path-এ বসবে।
+
+=========================================================
+STEP 3 - DATABASE MIGRATION (OBLIGATORY)
+=========================================================
+
+CMD খুলুন:
+
+cd /d E:\techpilot-ai\techpilot-ai\backend
+npm run migrate
+
+Expected:
+Migration 009 সফলভাবে apply হবে।
+
+Migration status দেখতে:
+npm run migrate:status
+
+Docker ব্যবহার করলে:
+docker compose exec backend npm run migrate
+
+=========================================================
+STEP 4 - BACKEND RESTART
+=========================================================
+
+CMD window 1:
+
+cd /d E:\techpilot-ai\techpilot-ai\backend
+npm run dev
+
+যদি EADDRINUSE আসে:
+
+netstat -ano | findstr :5000
+
+তারপর:
+
+taskkill /PID <PID_NUMBER> /F
+
+এবং আবার:
+
+npm run dev
+
+=========================================================
+STEP 5 - FRONTEND RESTART
+=========================================================
+
+আরেকটি CMD window:
+
+cd /d E:\techpilot-ai\techpilot-ai\frontend
+npm run dev
+
+তারপর browser-এ:
+
+http://localhost:5173
+
+=========================================================
+STEP 6 - TEST 1: KNOWLEDGE DOCUMENT
+=========================================================
+
+Login করুন।
+Knowledge Base page খুলুন।
+Category, Title এবং Content দিয়ে একটি document add করুন।
+
+Expected:
+"Added — split into X chunk(s)." message আসবে এবং Documents list-এ document দেখা যাবে।
+
+=========================================================
+STEP 7 - TEST 2: FILE UPLOAD
+=========================================================
+
+একটি ছোট test file বানান:
+
+test-knowledge.txt
+
+এর মধ্যে লিখুন:
+
+PostgreSQL test knowledge for TechPilot AI.
+
+Knowledge Base -> Upload a File -> file select -> Upload File
+
+Expected:
+Upload সফল হবে এবং chunk count দেখাবে।
+
+=========================================================
+STEP 8 - TEST 3: SEARCH
+=========================================================
+
+Knowledge Base-এর Test Search-এ লিখুন:
+
+PostgreSQL test knowledge
+
+Expected:
+Uploaded document-এর matching chunk result হিসেবে আসবে।
+
+=========================================================
+STEP 9 - TEST 4: DIAGNOSIS + RAG
+=========================================================
+
+Diagnose page-এ একটি PostgreSQL-related problem দিন।
+
+Expected:
+Diagnosis সফল হলে result-এর মধ্যে "Knowledge Base Used" section দেখা যাবে, যদি relevant knowledge পাওয়া যায়।
+
+=========================================================
+IMPORTANT
+=========================================================
+
+- .env file কখনো GitHub-এ commit করবেন না।
+- File upload-এর limit 2 MB।
+- শুধুমাত্র অনুমোদিত text/code extension upload করুন।
+- Database migration ছাড়া নতুন knowledge user_id column কাজ করবে না।
+- যদি "missing column" বা 42703 error আসে:
+  cd /d E:\techpilot-ai\techpilot-ai\backend
+  npm run migrate
+
+=========================================================
+DONE
+=========================================================
+
+এই FIX install করে উপরের testগুলো করুন।
+সব ঠিক হলে আমাকে শুধু লিখবেন:
+
+"FIX-6-7 install hoyeche, test complete"
+
+কোনো error হলে screenshot অথবা পুরো error text পাঠাবেন।
+পরের task (#11 Automated Tests + CI) তখন শুরু করা হবে।

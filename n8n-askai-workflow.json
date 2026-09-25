@@ -1,0 +1,107 @@
+{
+  "name": "Tech AI Ask AI",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "askai",
+        "responseMode": "responseNode"
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "webhookId": "askai-webhook-001"
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "requestMethod": "POST",
+        "url": "http://host.docker.internal:5000/api/diagnosis",
+        "allowUnauthorizedCerts": false,
+        "responseFormat": "json",
+        "jsonParameters": false,
+        "sendHeaders": true,
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $json.body.token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "problem",
+              "value": "={{$json.body.problem}}"
+            },
+            {
+              "name": "projectId",
+              "value": "={{$json.body.projectId}}"
+            }
+          ]
+        },
+        "sendQuery": false,
+        "queryParametersUi": {
+          "parameter": []
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "name": "Create Diagnosis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseData": "={{$json}}",
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": []
+          }
+        }
+      },
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 2,
+      "position": [750, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Create Diagnosis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Diagnosis": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
