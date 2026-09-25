@@ -136,8 +136,10 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="dashboard-ai-logo">
-        <i className="fa-solid fa-robot"></i>
+<div className="dashboard-ai-logo" aria-hidden="true">
+        <div className="dashboard-ai-logo__orb">
+          <i className="fa-solid fa-robot dashboard-ai-logo__icon"></i>
+        </div>
       </div>
 
       <div className="stat-grid">
