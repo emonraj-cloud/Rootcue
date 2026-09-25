@@ -26,7 +26,9 @@ router.post('/', protect, async (req, res) => {
     const result = await pool.query(
       `INSERT INTO api_keys (workspace_id, name, key_hash, key_prefix, permissions, status, expires_at, created_by, created_at, updated_at)
        VALUES ($1, $2, $3, $4, $5, 'active', $6, $7, NOW(), NOW()) RETURNING id, name, key_prefix, permissions, status, created_at`,
-      [req.user.workspace_id || null, name, keyHash, keyPrefix, permissions || {}, expires_at, req.user.userId]
+      // permissions is jsonb and the client sends an array, which
+      // node-postgres would turn into an invalid Postgres array literal.
+      [req.user.workspace_id || null, name, keyHash, keyPrefix, JSON.stringify(permissions || {}), expires_at, req.user.userId]
     )
     res.status(201).json({ success: true, api_key: result.rows[0], key: apiKey })
   } catch (err) {

@@ -91,7 +91,24 @@ export default function CreateAgent() {
     }
     setLoading(true)
     try {
-      const res = await api.post('/api/agents', formData)
+      // The form uses UI-level field names, but the agents table stores
+      // different ones. Sending formData as-is created empty agents.
+      const selectedModel = models.find((m) => m.name === formData.model)
+      const res = await api.post('/api/agents', {
+        name: formData.name,
+        description: formData.description,
+        agent_type: 'general',
+        instructions: formData.system_prompt,
+        tool_ids: formData.tools,
+        model_config: {
+          provider: formData.provider || null,
+          provider_id: selectedProvider?.id || null,
+          model: formData.model || null,
+          model_id: selectedModel?.id || null,
+          tags: formData.tags,
+          config: formData.config
+        }
+      })
       const newAgent = res.agent
       navigate(`/agents/${newAgent.id}`)
     } catch (err) {
@@ -105,7 +122,12 @@ export default function CreateAgent() {
     setStep(Math.max(1, step - 1))
   }
 
-  const availableModels = model.filter(m => !formData.provider || m.provider === formData.provider)
+  // The models table links to a provider through provider_id, and there is
+  // no "provider" column on a model row.
+  const selectedProvider = providers.find((p) => p.name === formData.provider)
+  const availableModels = selectedProvider
+    ? models.filter((m) => m.provider_id === selectedProvider.id)
+    : models
 
   return (
     <div className="p-6 max-w-3xl mx-auto">

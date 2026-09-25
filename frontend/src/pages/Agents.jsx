@@ -74,20 +74,20 @@ export default function Agents() {
               <div className="agent-icon">
                 <i className="fa-solid fa-robot"></i>
               </div>
-              <div className="agent-status-dot" style={{ backgroundColor: agent.active ? '#10b981' : '#ef4444' }}></div>
-            </div>
-            <div className="agent-card-body">
-              <h3 className="agent-card-title">{agent.name}</h3>
-              <p className="agent-card-description">{agent.description || 'No description provided.'}</p>
-              <div className="agent-tags">
-                {agent.tags && agent.tags.map((tag) => (
-                  <span key={tag} className="agent-tag">{tag}</span>
-                ))}
+                <div className="agent-status-dot" style={{ backgroundColor: agent.is_active ? '#10b981' : '#ef4444' }}></div>
               </div>
-              <div className="agent-meta">
-                <span className="agent-model">{agent.provider || 'OpenAI'} / {agent.model || 'gpt-4'}</span>
-                <span className={`agent-badge ${agent.active ? 'active' : 'inactive'}`}>{agent.active ? 'Active' : 'Inactive'}</span>
-              </div>
+              <div className="agent-card-body">
+                <h3 className="agent-card-title">{agent.name}</h3>
+                <p className="agent-card-description">{agent.description || 'No description provided.'}</p>
+                <div className="agent-tags">
+                  {(agent.model_config?.tags || []).map((tag) => (
+                    <span key={tag} className="agent-tag">{tag}</span>
+                  ))}
+                </div>
+                <div className="agent-meta">
+                  <span className="agent-model">{agent.model_config?.provider || 'No provider'} / {agent.model_config?.model || 'default'}</span>
+                  <span className={`agent-badge ${agent.is_active ? 'active' : 'inactive'}`}>{agent.is_active ? 'Active' : 'Inactive'}</span>
+                </div>
             </div>
             <div className="agent-card-footer">
               <button

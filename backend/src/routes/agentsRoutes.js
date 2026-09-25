@@ -49,11 +49,16 @@ router.get('/:id', protect, async (req, res) => {
 router.post('/', protect, async (req, res) => {
   try {
     const { name, description, avatar_url, agent_type, model_config, instructions, personality, response_style, rules, tool_ids, knowledge_base_ids, guardrails } = req.body
+    // model_config / tool_ids / knowledge_base_ids / guardrails are jsonb.
+    // node-postgres turns a plain JS array into a Postgres array literal,
+    // which jsonb rejects with "invalid input syntax for type json", so
+    // these have to be serialised here. An empty array slipped through
+    // because it happens to serialise to the valid JSON "{}".
     const result = await pool.query(
       `INSERT INTO agents (workspace_id, name, description, avatar_url, agent_type, model_config, instructions, personality, response_style, rules, tool_ids, knowledge_base_ids, guardrails, created_by, created_at, updated_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW(), NOW())
        RETURNING *`,
-      [req.user.workspace_id || null, name, description, avatar_url, agent_type || 'general', model_config || {}, instructions, personality, response_style, rules, tool_ids || [], knowledge_base_ids || [], guardrails || {}, req.user.userId]
+      [req.user.workspace_id || null, name, description, avatar_url, agent_type || 'general', JSON.stringify(model_config || {}), instructions, personality, response_style, rules, JSON.stringify(tool_ids || []), JSON.stringify(knowledge_base_ids || []), JSON.stringify(guardrails || {}), req.user.userId]
     )
     res.status(201).json({ success: true, agent: result.rows[0] })
   } catch (err) {
@@ -64,11 +69,33 @@ router.post('/', protect, async (req, res) => {
 
 router.put('/:id', protect, async (req, res) => {
   try {
-    const { name, description, avatar_url, status, agent_type, model_config, instructions, personality, response_style, rules, tool_ids, knowledge_base_ids, guardrails, is_active } = req.body
+    // Only touch the fields the client actually sent. Writing every column
+    // turned any partial update into NULLs, which broke the NOT NULL
+    // constraints on name, status and agent_type.
+    const body = req.body || {}
+    const jsonbFields = new Set(['model_config', 'tool_ids', 'knowledge_base_ids', 'guardrails'])
+
+    const sets = []
+    const values = []
+    for (const [key, value] of Object.entries(body)) {
+      if (key === 'id' || key === 'workspace_id' || key === 'created_by' || key === 'created_at' || key === 'updated_at') continue
+      if (!/^[a-z_]+$/.test(key)) continue
+
+      values.push(jsonbFields.has(key) && value != null ? JSON.stringify(value) : value)
+      sets.push(`${key} = $${values.length}`)
+    }
+
+    if (sets.length === 0) {
+      return res.status(400).json({ success: false, message: 'No fields to update' })
+    }
+
+    values.push(req.params.id)
+    values.push(req.user.workspace_id || null)
+
     const result = await pool.query(
-      `UPDATE agents SET name=$1, description=$2, avatar_url=$3, status=$4, agent_type=$5, model_config=$6, instructions=$7, personality=$8, response_style=$9, rules=$10, tool_ids=$11, knowledge_base_ids=$12, guardrails=$13, is_active=$14, updated_at=NOW()
-       WHERE id = $15 AND workspace_id = $16 RETURNING *`,
-      [name, description, avatar_url, status, agent_type, model_config, instructions, personality, response_style, rules, tool_ids, knowledge_base_ids, guardrails, is_active, req.params.id, req.user.workspace_id || null]
+      `UPDATE agents SET ${sets.join(', ')}, updated_at = NOW()
+       WHERE id = $${values.length - 1} AND workspace_id = $${values.length} RETURNING *`,
+      values
     )
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Agent not found' })

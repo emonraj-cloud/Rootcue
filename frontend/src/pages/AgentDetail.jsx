@@ -77,12 +77,6 @@ export default function AgentDetail() {
             </div>
           </div>
         </div>
-        <button
-          onClick={() => navigate(`/agents/${id}/edit`)}
-          className="px-4 py-2 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-        >
-          <i className="fa-solid fa-pen mr-2"></i>Edit
-        </button>
       </div>
 
       <div className="agent-detail-container">
@@ -105,36 +99,36 @@ export default function AgentDetail() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="agent-stat-card">
                   <div className="agent-stat-label">Provider</div>
-                  <div className="agent-stat-value">{agent.provider || 'N/A'}</div>
+                  <div className="agent-stat-value">{agent.model_config?.provider || 'N/A'}</div>
                 </div>
                 <div className="agent-stat-card">
                   <div className="agent-stat-label">Model</div>
-                  <div className="agent-stat-value">{agent.model || 'N/A'}</div>
+                  <div className="agent-stat-value">{agent.model_config?.model || 'default'}</div>
                 </div>
                 <div className="agent-stat-card">
                   <div className="agent-stat-label">Status</div>
                   <div className="agent-stat-value">
-                    <span className={`agent-badge ${agent.active ? 'active' : 'inactive'}`}>
-                      {agent.active ? 'Active' : 'Inactive'}
+                    <span className={`agent-badge ${agent.is_active ? 'active' : 'inactive'}`}>
+                      {agent.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </div>
                 </div>
               </div>
 
-              {agent.system_prompt && (
+              {agent.instructions && (
                 <div>
                   <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">System Prompt</h3>
                   <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                    {agent.system_prompt}
+                    {agent.instructions}
                   </div>
                 </div>
               )}
 
-              {agent.tags && agent.tags.length > 0 && (
+              {agent.model_config?.tags?.length > 0 && (
                 <div>
                   <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Tags</h3>
                   <div className="flex flex-wrap gap-2">
-                    {agent.tags.map((tag) => (
+                    {agent.model_config.tags.map((tag) => (
                       <span key={tag} className="agent-tag">{tag}</span>
                     ))}
                   </div>
@@ -167,11 +161,11 @@ export default function AgentDetail() {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Connected Tools</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {agent.tools && agent.tools.length > 0 ? (
-                  agent.tools.map((tool) => (
-                    <div key={tool.id || tool.name} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
-                      <div className="font-medium text-gray-900 dark:text-white">{tool.name}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">{tool.description}</div>
+                {agent.tool_ids && agent.tool_ids.length > 0 ? (
+                  agent.tool_ids.map((toolId) => (
+                    <div key={toolId} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                      <div className="font-mono text-sm text-gray-900 dark:text-white break-all">{toolId}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Connected tool</div>
                     </div>
                   ))
                 ) : (
@@ -193,7 +187,7 @@ export default function AgentDetail() {
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Agent Logs</h3>
               <div className="bg-gray-900 dark:bg-black rounded-lg p-4 text-sm text-gray-300 font-mono h-64 overflow-y-auto">
                 <div className="text-green-400 mb-1">● Agent {agent.name} initialized</div>
-                <div className="text-blue-400 mb-1">● Model configured: {agent.model || 'default'}</div>
+                <div className="text-blue-400 mb-1">● Model configured: {agent.model_config?.model || 'default'}</div>
                 <div className="text-gray-500">No recent logs available.</div>
               </div>
             </div>
