@@ -36,8 +36,8 @@ export default function CreateAgent() {
 
   async function fetchProviders() {
     try {
-      const res = await api.get('/api/providers')
-      setProviders(res.data.data || [])
+      const res = await api.get('/api/models/providers')
+      setProviders(res.providers || [])
     } catch (err) {
       console.error('Failed to fetch providers:', err)
     }
@@ -46,7 +46,7 @@ export default function CreateAgent() {
   async function fetchModels() {
     try {
       const res = await api.get('/api/models')
-      setModels(res.data.data || [])
+      setModels(res.models || [])
     } catch (err) {
       console.error('Failed to fetch models:', err)
     }
@@ -55,7 +55,7 @@ export default function CreateAgent() {
   async function fetchTools() {
     try {
       const res = await api.get('/api/tools')
-      setTools(res.data.data || [])
+      setTools(res.tools || [])
     } catch (err) {
       console.error('Failed to fetch tools:', err)
     }
@@ -92,10 +92,10 @@ export default function CreateAgent() {
     setLoading(true)
     try {
       const res = await api.post('/api/agents', formData)
-      const newAgent = res.data.data || res.data.agent
+      const newAgent = res.agent
       navigate(`/agents/${newAgent.id}`)
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to create agent')
+      alert(err.message || 'Failed to create agent')
     } finally {
       setLoading(false)
     }

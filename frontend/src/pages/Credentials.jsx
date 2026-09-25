@@ -13,7 +13,7 @@ export default function Credentials() {
     setLoading(true)
     try {
       const res = await api.get('/api/credentials')
-      setCredentials(res.data.data || [])
+      setCredentials(res.credentials || [])
     } catch (err) {
       console.error('Failed to fetch credentials:', err)
     } finally {

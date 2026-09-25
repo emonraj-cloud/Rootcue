@@ -13,7 +13,7 @@ export default function Conversations() {
     setLoading(true)
     try {
       const res = await api.get('/api/conversations')
-      setConversations(res.data.data || [])
+      setConversations(res.conversations || [])
     } catch (err) {
       console.error('Failed to fetch conversations:', err)
     } finally {

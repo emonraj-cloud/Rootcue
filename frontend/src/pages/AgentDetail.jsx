@@ -17,10 +17,10 @@ export default function AgentDetail() {
   async function fetchAgent() {
     try {
       const res = await api.get(`/api/agents/${id}`)
-      setAgent(res.data.data || res.data.agent)
+      setAgent(res.agent)
       setError(null)
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch agent')
+      setError(err.message || 'Failed to fetch agent')
     } finally {
       setLoading(false)
     }

@@ -15,10 +15,10 @@ export default function Agents() {
   async function fetchAgents() {
     try {
       const res = await api.get('/api/agents')
-      setAgents(res.data.data || [])
+      setAgents(res.agents || [])
       setError(null)
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch agents')
+      setError(err.message || 'Failed to fetch agents')
     } finally {
       setLoading(false)
     }

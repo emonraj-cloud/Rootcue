@@ -12,8 +12,8 @@ export default function Providers() {
   async function fetchProviders() {
     setLoading(true)
     try {
-      const res = await api.get('/api/providers')
-      setProviders(res.data.data || [])
+      const res = await api.get('/api/models/providers')
+      setProviders(res.providers || [])
     } catch (err) {
       console.error('Failed to fetch providers:', err)
     } finally {

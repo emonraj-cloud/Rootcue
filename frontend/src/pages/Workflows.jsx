@@ -15,7 +15,7 @@ export default function Workflows() {
     setLoading(true)
     try {
       const res = await api.get('/api/workflows')
-      setWorkflows(res.data.data || [])
+      setWorkflows(res.workflows || [])
     } catch (err) {
       console.error('Failed to fetch workflows:', err)
     } finally {

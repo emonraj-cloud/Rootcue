@@ -2,11 +2,20 @@ import express from 'express'
 import pool from '../config/database.js'
 import { protect } from '../middleware/authMiddleware.js'
 import { visualUpload } from '../middleware/visualUploadMiddleware.js'
-import { visualAgentHandler } from '../controllers/agentsController.js'
+import {
+  codeAgentHandler,
+  databaseAgentHandler,
+  devopsAgentHandler,
+  visualAgentHandler
+} from '../controllers/agentsController.js'
 
 const router = express.Router()
 
+// The AI agent endpoints must be declared before the '/:id' routes.
 router.post('/visual', protect, visualUpload.single('image'), visualAgentHandler)
+router.post('/code', protect, codeAgentHandler)
+router.post('/database', protect, databaseAgentHandler)
+router.post('/devops', protect, devopsAgentHandler)
 
 router.get('/', protect, async (req, res) => {
   try {

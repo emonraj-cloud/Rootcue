@@ -44,9 +44,21 @@ router.get('/', protect, async (req, res) => {
       [req.user.workspace_id || null, days]
     )
 
+    // Counts the Analytics page displays but that are not part of the
+    // execution summary above.
+    const counts = await pool.query(
+      `SELECT
+         (SELECT COUNT(*) FROM agents WHERE workspace_id = $1) AS total_agents,
+         (SELECT COUNT(*) FROM conversations WHERE workspace_id = $1) AS total_conversations,
+         (SELECT COALESCE(SUM(COALESCE((token_usage->>'total_tokens')::bigint, 0)), 0)
+            FROM executions WHERE workspace_id = $1) AS total_tokens`,
+      [req.user.workspace_id || null]
+    )
+
     res.json({
       success: true,
       summary: result.rows[0],
+      counts: counts.rows[0],
       daily: dailyStats.rows,
       topAgents: topAgents.rows
     })

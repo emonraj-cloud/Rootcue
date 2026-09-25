@@ -13,7 +13,7 @@ export default function Integrations() {
     setLoading(true)
     try {
       const res = await api.get('/api/integrations')
-      setIntegrations(res.data.data || [])
+      setIntegrations(res.integrations || [])
     } catch (err) {
       console.error('Failed to fetch integrations:', err)
     } finally {

@@ -13,7 +13,7 @@ export default function Executions() {
     setLoading(true)
     try {
       const res = await api.get('/api/executions')
-      setExecutions(res.data.data || [])
+      setExecutions(res.executions || [])
     } catch (err) {
       console.error('Failed to fetch executions:', err)
     } finally {

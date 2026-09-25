@@ -15,7 +15,7 @@ export default function Tools() {
     setLoading(true)
     try {
       const res = await api.get('/api/tools')
-      setTools(res.data.data || [])
+      setTools(res.tools || [])
     } catch (err) {
       console.error('Failed to fetch tools:', err)
     } finally {

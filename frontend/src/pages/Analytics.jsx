@@ -18,8 +18,18 @@ export default function Analytics() {
   async function fetchStats() {
     setLoading(true)
     try {
-      const res = await api.get('/api/analytics/stats')
-      setStats(res.data.data || stats)
+      const res = await api.get('/api/analytics')
+      const summary = res.summary || {}
+      const counts = res.counts || {}
+      const total = Number(summary.total_executions) || 0
+      const success = Number(summary.success_count) || 0
+      setStats({
+        total_agents: Number(counts.total_agents) || 0,
+        total_executions: total,
+        total_conversations: Number(counts.total_conversations) || 0,
+        total_tokens: Number(counts.total_tokens) || 0,
+        success_rate: total > 0 ? Math.round((success / total) * 100) : 0
+      })
     } catch (err) {
       console.error('Failed to fetch analytics:', err)
     } finally {
