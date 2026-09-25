@@ -1,9 +1,42 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client.js'
+import Greeting from '../components/Greeting.jsx'
+import CrystalRobot from '../components/CrystalRobot.jsx'
 
 const N8N_WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL || 'http://localhost:5678/webhook/askai'
 
+// The three things a user actually comes here to do. Each one hands the
+// typed question straight to the matching tool.
+const TOOLS = [
+  {
+    key: 'diagnose',
+    label: 'Diagnose',
+    hint: 'Describe an error in words',
+    icon: 'fa-stethoscope',
+    color: 'indigo',
+    path: '/diagnose'
+  },
+  {
+    key: 'visual',
+    label: 'Visual Diagnose',
+    hint: 'Upload a screenshot',
+    icon: 'fa-eye',
+    color: 'cyan',
+    path: '/visual'
+  },
+  {
+    key: 'code',
+    label: 'Code Fix',
+    hint: 'Paste code plus the error',
+    icon: 'fa-code',
+    color: 'emerald',
+    path: '/code-fix'
+  }
+]
+
 export default function Dashboard() {
+  const navigate = useNavigate()
   const [stats, setStats] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
@@ -70,63 +103,57 @@ export default function Dashboard() {
   const recentDiagnoses = Array.isArray(stats.recentDiagnoses) ? stats.recentDiagnoses : []
   const recentVerifications = Array.isArray(stats.recentVerifications) ? stats.recentVerifications : []
 
+  const verifiedCount = verificationStats.success || 0
+  const failedCount = verificationStats.failed || 0
+  const partialCount = verificationStats.partial || 0
+  const ratedCount = verifiedCount + failedCount + partialCount
+  const successRate = ratedCount > 0 ? Math.round((verifiedCount / ratedCount) * 100) : null
+
+  // Every value below comes from the API. There are no hardcoded trends.
   const statCards = [
     {
       key: 'projects',
       label: 'Projects',
-      value: stats.totalProjects,
+      value: stats.totalProjects ?? 0,
       icon: 'fa-folder',
       color: 'blue',
-      trend: '+12% this month',
-      trendColor: 'emerald'
+      trend: stats.totalProjects > 0 ? 'Tracked in your workspace' : 'Create your first project',
+      trendColor: stats.totalProjects > 0 ? 'emerald' : 'slate'
     },
     {
       key: 'diagnoses',
       label: 'Diagnoses',
-      value: stats.totalDiagnoses,
+      value: stats.totalDiagnoses ?? 0,
       icon: 'fa-stethoscope',
       color: 'indigo',
-      trend: '+8% overall',
+      trend: 'AI analyses run',
       trendColor: 'indigo'
     },
     {
       key: 'verified',
       label: 'Verified Fixes',
-      value: stats.verifications?.success || 0,
+      value: verifiedCount,
       icon: 'fa-check-double',
       color: 'emerald',
-      trend: 'Ready for validation',
-      trendColor: 'slate'
+      trend: ratedCount > 0 ? `${successRate}% success rate` : 'No fixes rated yet',
+      trendColor: 'emerald'
     },
     {
       key: 'failed',
       label: 'Failed Fixes',
-      value: stats.verifications?.failed || 0,
+      value: failedCount,
       icon: 'fa-bug',
       color: 'rose',
-      trend: stats.verifications?.failed > 0 ? 'Action required' : 'All clear',
-      trendColor: stats.verifications?.failed > 0 ? 'rose' : 'emerald'
+      trend: failedCount > 0 ? 'Action required' : 'All clear',
+      trendColor: failedCount > 0 ? 'rose' : 'emerald'
     }
   ]
 
   return (
     <div className="dashboard-container">
-      <div className="dashboard-header">
-        <div className="header-left">
-          <div className="header-orb">
-            <div className="orb-ring"></div>
-            <div className="orb-core">
-              <i className="fa-solid fa-robot"></i>
-            </div>
-            <div className="orb-ai-badge">
-              <i className="fa-solid fa-robot"></i>
-            </div>
-          </div>
-          <div>
-            <h1 className="dashboard-title">Dashboard</h1>
-            <p className="dashboard-subtitle">Crystal Soft Neural Diagnosis Matrix</p>
-          </div>
-        </div>
+      <Greeting />
+
+      <div className="dashboard-header dashboard-header--slim">
         <div className="header-status">
           <span className="status-indicator">
             <i className="fa-solid fa-robot ai-symbol"></i>
@@ -136,11 +163,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-<div className="dashboard-ai-logo" aria-hidden="true">
-        <div className="dashboard-ai-logo__orb">
-          <i className="fa-solid fa-robot dashboard-ai-logo__icon"></i>
-        </div>
-      </div>
 
       <div className="stat-grid">
         {statCards.map((card) => (
@@ -151,14 +173,21 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div className="ask-ai-section contact-card">
-        <div className="contact-header">
-          <i className="fa-solid fa-message-dot contact-icon"></i>
-          <div>
-            <h2 className="contact-title">Ask AI</h2>
-            <p className="contact-desc">Describe your problem and get an AI-powered diagnosis</p>
-          </div>
+      <section className="ask-ai-hero">
+        <div className="ask-ai-hero__robot" aria-hidden="true">
+          <CrystalRobot />
+          <div className="ask-ai-hero__pulse" />
         </div>
+
+        <div className="ask-ai-section contact-card">
+          <div className="contact-header">
+            <i className="fa-solid fa-message-dot contact-icon"></i>
+            <div>
+              <h2 className="contact-title">Ask AI</h2>
+              <p className="contact-desc">Describe your problem and get an AI-powered diagnosis</p>
+            </div>
+          </div>
+
         <form className="contact-form" onSubmit={handleAskAI}>
           <textarea
             placeholder="e.g. PostgreSQL connection refused on port 5432"
@@ -197,13 +226,35 @@ export default function Dashboard() {
             </div>
             <button
               className="contact-btn contact-btn--secondary"
-              onClick={() => window.location.href = `/diagnose?problem=${encodeURIComponent(askQuery)}`}
+              onClick={() => navigate(`/diagnose?problem=${encodeURIComponent(askQuery)}`)}
             >
               View Full Diagnosis
             </button>
           </div>
         )}
-      </div>
+        </div>
+
+        <div className="tool-tiles">
+          {TOOLS.map((tool) => (
+            <button
+              key={tool.key}
+              type="button"
+              className={`tool-tile tool-tile--${tool.color}`}
+              onClick={() => navigate(tool.path)}
+            >
+              <span className="tool-tile__icon">
+                <i className={`fa-solid ${tool.icon}`}></i>
+              </span>
+              <span className="tool-tile__text">
+                <strong>{tool.label}</strong>
+                <small>{tool.hint}</small>
+              </span>
+              <i className="fa-solid fa-chevron-right tool-tile__arrow" aria-hidden="true"></i>
+            </button>
+          ))}
+        </div>
+      </section>
+
 
       <div className="sections-grid">
         <section className="glass-panel section-card">

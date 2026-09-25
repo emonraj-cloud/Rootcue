@@ -4145,3 +4145,228 @@ body {
   .agent-icon { width: 36px; height: 36px; font-size: 15px; }
   .agent-card-description { -webkit-line-clamp: 3; min-height: 0; }
 }
+
+/* ============================================================
+   DASHBOARD — greeting, crystal robot hero, tool tiles
+   ============================================================ */
+
+/* ---------- greeting ---------- */
+.greeting {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.greeting-text { min-width: 0; }
+
+.greeting-title {
+  margin: 0;
+  font-size: 30px;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.greeting-name {
+  background: linear-gradient(90deg, #6366f1, #a855f7, #06b6d4);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.greeting-sub {
+  margin: 7px 0 0;
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.greeting-clock {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #4338ca;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  white-space: nowrap;
+}
+
+.dark .greeting-title { color: #e2e8f0; }
+.dark .greeting-sub { color: #94a3b8; }
+.dark .greeting-clock {
+  color: #c7d2fe;
+  background: rgba(99, 102, 241, 0.16);
+  border-color: rgba(129, 140, 248, 0.3);
+}
+
+/* ---------- slim header row (status only) ---------- */
+.dashboard-header--slim {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0 0 4px;
+  border: 0;
+  background: transparent;
+}
+
+/* ---------- ASK AI hero: robot + card ---------- */
+.ask-ai-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(200px, 260px) 1fr;
+  gap: 26px;
+  align-items: stretch;
+  margin: 6px 0 24px;
+}
+
+.ask-ai-hero__robot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 6px;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(99, 102, 241, 0.16), transparent 62%),
+    rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  overflow: hidden;
+}
+
+.dark .ask-ai-hero__robot {
+  background:
+    radial-gradient(circle at 50% 42%, rgba(99, 102, 241, 0.22), transparent 62%),
+    rgba(15, 23, 42, 0.6);
+  border-color: rgba(129, 140, 248, 0.26);
+}
+
+.ask-ai-hero__robot .crystal-robot {
+  width: 100%;
+  max-width: 230px;
+  height: auto;
+  filter: drop-shadow(0 10px 26px rgba(79, 70, 229, 0.4));
+  animation: crystal-float 6s ease-in-out infinite;
+}
+
+.ask-ai-hero__pulse {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 190px;
+  height: 190px;
+  margin: -95px 0 0 -95px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.22), transparent 68%);
+  animation: crystal-pulse 3.6s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes crystal-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-9px); }
+}
+
+@keyframes crystal-pulse {
+  0% { transform: scale(0.82); opacity: 0.75; }
+  100% { transform: scale(1.28); opacity: 0; }
+}
+
+/* ASK AI card fills the right-hand side of the hero */
+.ask-ai-hero .ask-ai-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0;
+  height: 100%;
+}
+
+/* ---------- tool tiles ---------- */
+.tool-tiles {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 2px;
+}
+
+.tool-tile {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 14px 16px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 16px;
+  font: inherit;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+}
+
+.dark .tool-tile {
+  background: rgba(15, 23, 42, 0.75);
+  border-color: #1e293b;
+}
+
+.tool-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+.tool-tile:active { transform: translateY(0); }
+
+.tool-tile__icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex: none;
+  border-radius: 12px;
+  font-size: 17px;
+  color: #fff;
+}
+
+.tool-tile--indigo .tool-tile__icon { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+.tool-tile--cyan .tool-tile__icon { background: linear-gradient(135deg, #22d3ee, #0891b2); }
+.tool-tile--emerald .tool-tile__icon { background: linear-gradient(135deg, #34d399, #059669); }
+
+.tool-tile__text { display: flex; flex-direction: column; min-width: 0; }
+.tool-tile__text strong { font-size: 14.5px; font-weight: 650; }
+.tool-tile__text small { font-size: 12.5px; color: #64748b; margin-top: 2px; }
+.dark .tool-tile__text strong { color: #e2e8f0; }
+.dark .tool-tile__text small { color: #94a3b8; }
+
+.tool-tile__arrow {
+  margin-left: auto;
+  flex: none;
+  font-size: 11px;
+  color: #cbd5e1;
+  transition: transform 0.16s ease, color 0.16s ease;
+}
+.tool-tile:hover .tool-tile__arrow { transform: translateX(3px); color: #6366f1; }
+
+/* ---------- responsive ---------- */
+@media (max-width: 1080px) {
+  .ask-ai-hero { grid-template-columns: 1fr; }
+  .ask-ai-hero__robot { padding: 18px 6px; }
+  .ask-ai-hero__robot .crystal-robot { max-width: 190px; }
+  .tool-tiles { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 620px) {
+  .greeting-title { font-size: 24px; }
+  .greeting { gap: 12px; }
+  .greeting-clock { align-self: flex-start; }
+}
