@@ -2,6 +2,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useTheme } from '../context/ThemeContext.jsx'
 import AskAI from '../pages/AskAI.jsx'
+import BrainIcon from './BrainIcon.jsx'
 
 export default function Layout() {
   const { user, logout } = useAuth()
@@ -19,7 +20,7 @@ export default function Layout() {
           <div className="sidebar-header">
             <div className="sidebar-logo">
               <div className="logo-orb">
-                <i className="fa-solid fa-brain"></i>
+                <BrainIcon />
               </div>
               <div>
                 <h1 className="sidebar-title">NEXORA AI</h1>
