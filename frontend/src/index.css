@@ -1,3 +1,24 @@
+/* ------------------------------------------------------------
+   Tailwind v4 utilities.
+
+   A dozen pages (Providers, Tools, Agents, Analytics, Logs, ...)
+   are written with Tailwind class names, but Tailwind was never
+   actually wired into the build, so every one of those classes
+   resolved to nothing and the pages fell back to unstyled browser
+   defaults. Preflight is deliberately left out: it would reset
+   margins, headings and buttons across the whole app, and the rest
+   of the UI is styled by App.css rather than by Tailwind.
+
+   theme.css carries the design tokens (used by the utilities),
+   utilities.css carries the classes the pages ask for.
+   ------------------------------------------------------------ */
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/* Tailwind v4 defaults `dark:` to prefers-color-scheme. This app toggles
+   a .dark class on <html> and <body> instead, so point the variant at it. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 body {
   margin: 0;
   font-family: 'Plus Jakarta Sans', sans-serif;
