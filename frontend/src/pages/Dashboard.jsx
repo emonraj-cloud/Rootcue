@@ -2,23 +2,18 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client.js'
 import Greeting from '../components/Greeting.jsx'
+import DashComposer from '../components/DashComposer.jsx'
+import RobotIcon from '../components/RobotIcon.jsx'
 
-// The three things a user actually comes here to do. Each one hands the
-// typed question straight to the matching tool.
+// Everything on this page is a link or a button. A tile that only shows a
+// number is decoration; a tile that shows a number and takes you to the
+// place that number comes from is a control.
 const TOOLS = [
-  {
-    key: 'diagnose',
-    label: 'Diagnose',
-    hint: 'Describe an error in words',
-    icon: 'fa-stethoscope',
-    color: 'indigo',
-    path: '/diagnose'
-  },
   {
     key: 'visual',
     label: 'Visual Diagnose',
     hint: 'Upload a screenshot',
-    icon: 'fa-eye',
+    icon: 'fa-image',
     color: 'cyan',
     path: '/visual'
   },
@@ -29,6 +24,38 @@ const TOOLS = [
     icon: 'fa-code',
     color: 'emerald',
     path: '/code-fix'
+  },
+  {
+    key: 'agents',
+    label: 'Agents',
+    hint: 'Build and tune specialists',
+    icon: 'fa-robot',
+    color: 'violet',
+    path: '/agents'
+  },
+  {
+    key: 'workflows',
+    label: 'Workflows',
+    hint: 'Chain agents together',
+    icon: 'fa-diagram-successor-step',
+    color: 'amber',
+    path: '/workflows'
+  },
+  {
+    key: 'projects',
+    label: 'Projects',
+    hint: 'Group your diagnoses',
+    icon: 'fa-folder-tree',
+    color: 'blue',
+    path: '/projects'
+  },
+  {
+    key: 'analytics',
+    label: 'Analytics',
+    hint: 'Usage and cost trends',
+    icon: 'fa-chart-line',
+    color: 'rose',
+    path: '/analytics'
   }
 ]
 
@@ -48,19 +75,27 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="dashboard-loading">
-        <div className="loading-orb">
-          <div className="orb-ring"></div>
-          <div className="orb-core">
-            <i className="fa-solid fa-brain"></i>
-          </div>
+      <div className="dash-loading">
+        <div className="dash-loading__orb">
+          <RobotIcon />
         </div>
-        <p className="loading-text">Initializing Crystal Neural Engine...</p>
+        <p>Waking the crystal engine</p>
       </div>
     )
   }
 
-  if (error) return <div className="error-banner">{error}</div>
+  if (error) {
+    return (
+      <div className="dash-loading">
+        <div className="dash-error dash-error--block">{error}</div>
+        <button type="button" className="dash-run" onClick={() => window.location.reload()}>
+          <i className="fa-solid fa-rotate-right" aria-hidden="true"></i>
+          Try again
+        </button>
+      </div>
+    )
+  }
+
   if (!stats) return null
 
   const verificationStats = stats.verifications || {}
@@ -79,10 +114,10 @@ export default function Dashboard() {
       key: 'projects',
       label: 'Projects',
       value: stats.totalProjects ?? 0,
-      icon: 'fa-folder',
+      icon: 'fa-folder-tree',
       color: 'blue',
-      trend: stats.totalProjects > 0 ? 'Tracked in your workspace' : 'Create your first project',
-      trendColor: stats.totalProjects > 0 ? 'emerald' : 'slate'
+      hint: stats.totalProjects > 0 ? 'Open your projects' : 'Create your first project',
+      path: '/projects'
     },
     {
       key: 'diagnoses',
@@ -90,8 +125,8 @@ export default function Dashboard() {
       value: stats.totalDiagnoses ?? 0,
       icon: 'fa-stethoscope',
       color: 'indigo',
-      trend: 'AI analyses run',
-      trendColor: 'indigo'
+      hint: 'See the full history',
+      path: '/history'
     },
     {
       key: 'verified',
@@ -99,8 +134,8 @@ export default function Dashboard() {
       value: verifiedCount,
       icon: 'fa-check-double',
       color: 'emerald',
-      trend: ratedCount > 0 ? `${successRate}% success rate` : 'No fixes rated yet',
-      trendColor: 'emerald'
+      hint: ratedCount > 0 ? `${successRate}% success rate` : 'No fixes rated yet',
+      path: '/history'
     },
     {
       key: 'failed',
@@ -108,192 +143,173 @@ export default function Dashboard() {
       value: failedCount,
       icon: 'fa-bug',
       color: 'rose',
-      trend: failedCount > 0 ? 'Action required' : 'All clear',
-      trendColor: failedCount > 0 ? 'rose' : 'emerald'
+      hint: failedCount > 0 ? 'Needs your attention' : 'All clear',
+      path: '/history'
     }
   ]
 
   return (
-    <div className="dashboard-container">
-      <Greeting />
-
-      <div className="dashboard-header dashboard-header--slim">
-        <div className="header-status">
-          <span className="status-indicator">
-            <i className="fa-solid fa-robot ai-symbol"></i>
-            <span className="status-dot"></span>
-            AI Engine Active
+    <div className="dash">
+      {/* ---------- hero ---------- */}
+      <header className="dash-hero">
+        <div className="dash-hero__aura" aria-hidden="true"></div>
+        <Greeting />
+        <div className="dash-hero__badges">
+          <span className="dash-badge">
+            <span className="dash-dot"></span>
+            Engine active
           </span>
+          <span className="dash-badge">
+            <i className="fa-solid fa-microchip" aria-hidden="true"></i>
+            Ollama local
+          </span>
+          <button type="button" className="dash-badge dash-badge--btn" onClick={() => navigate('/settings')}>
+            <i className="fa-solid fa-sliders" aria-hidden="true"></i>
+            Settings
+          </button>
         </div>
-      </div>
+      </header>
 
+      {/* ---------- the one thing you came here to do ---------- */}
+      <DashComposer />
 
-      <div className="stat-grid">
+      {/* ---------- numbers, each one a door ---------- */}
+      <div className="dash-stats">
         {statCards.map((card) => (
-          <StatCard
-            key={card.key}
-            {...card}
-          />
+          <StatTile key={card.key} {...card} onOpen={() => navigate(card.path)} />
         ))}
       </div>
 
-      <div className="tool-tiles">
+      {/* ---------- shortcuts ---------- */}
+      <div className="dash-tools">
         {TOOLS.map((tool) => (
           <button
             key={tool.key}
             type="button"
-            className={`tool-tile tool-tile--${tool.color}`}
+            className={`dash-tool dash-tool--${tool.color}`}
             onClick={() => navigate(tool.path)}
           >
-            <span className="tool-tile__icon">
-              <i className={`fa-solid ${tool.icon}`}></i>
+            <span className="dash-tool__icon">
+              <i className={`fa-solid ${tool.icon}`} aria-hidden="true"></i>
             </span>
-            <span className="tool-tile__text">
+            <span className="dash-tool__text">
               <strong>{tool.label}</strong>
               <small>{tool.hint}</small>
             </span>
-            <i className="fa-solid fa-chevron-right tool-tile__arrow" aria-hidden="true"></i>
+            <i className="fa-solid fa-chevron-right dash-tool__arrow" aria-hidden="true"></i>
           </button>
         ))}
       </div>
 
-
-      <div className="sections-grid">
-        <section className="glass-panel section-card">
-          <div className="section-header">
-            <div className="section-icon indigo">
-              <i className="fa-solid fa-list-check"></i>
-            </div>
+      {/* ---------- history ---------- */}
+      <div className="dash-grid">
+        <section className="dash-panel">
+          <div className="dash-panel__head">
+            <span className="dash-panel__icon dash-panel__icon--indigo">
+              <i className="fa-solid fa-list-check" aria-hidden="true"></i>
+            </span>
             <div>
-              <h2 className="section-title">Recent Diagnoses</h2>
-              <p className="section-desc">Latest AI diagnostic queries</p>
+              <h2 className="dash-panel__title">Recent Diagnoses</h2>
+              <p className="dash-panel__sub">Click any row to reopen the full report</p>
             </div>
+            <button type="button" className="dash-panel__more" onClick={() => navigate('/history')}>
+              All <i className="fa-solid fa-arrow-right" aria-hidden="true"></i>
+            </button>
           </div>
-          <div className="activity-list">
-            {stats.recentDiagnoses.length === 0 ? (
-              <div className="empty-state">
-                <i className="fa-solid fa-magnifying-glass"></i>
-                <p>No diagnoses yet</p>
-                <span>Run your first diagnosis to see results here</span>
-              </div>
-            ) : (
-              stats.recentDiagnoses.map((d) => (
-                <ActivityItem
-                  key={d.id}
-                  category={d.agent_used}
-                  content={d.problem}
-                  time={d.created_at}
-                />
-              ))
-            )}
-          </div>
+
+          {recentDiagnoses.length === 0 ? (
+            <div className="dash-empty">
+              <i className="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+              <p>No diagnoses yet</p>
+              <span>Use the box above and the first result lands here.</span>
+            </div>
+          ) : (
+            <ul className="dash-list">
+              {recentDiagnoses.map((d) => (
+                <li key={d.id}>
+                  <button type="button" className="dash-row" onClick={() => navigate(`/diagnosis/${d.id}`)}>
+                    <span className="dash-row__tag">{d.agent_used || 'General'}</span>
+                    <span className="dash-row__text">{d.problem}</span>
+                    <span className="dash-row__time">{formatTime(d.created_at)}</span>
+                    <i className="fa-solid fa-chevron-right dash-row__arrow" aria-hidden="true"></i>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
-        <section className="glass-panel section-card">
-          <div className="section-header">
-            <div className="section-icon rose">
-              <i className="fa-solid fa-shield-cat"></i>
-            </div>
+        <section className="dash-panel">
+          <div className="dash-panel__head">
+            <span className="dash-panel__icon dash-panel__icon--rose">
+              <i className="fa-solid fa-shield-halved" aria-hidden="true"></i>
+            </span>
             <div>
-              <h2 className="section-title">Recent Verifications</h2>
-              <p className="section-desc">Automated AI health audit results</p>
+              <h2 className="dash-panel__title">Recent Verifications</h2>
+              <p className="dash-panel__sub">Did the suggested fix actually work</p>
             </div>
+            <span className="dash-panel__more dash-panel__more--static">
+              {ratedCount} rated
+            </span>
           </div>
-          <div className="activity-list">
-            {stats.recentVerifications.length === 0 ? (
-              <div className="empty-state">
-                <i className="fa-solid fa-clipboard-check"></i>
-                <p>No verifications yet</p>
-                <span>Verify a diagnosis fix to see results</span>
-              </div>
-            ) : (
-              stats.recentVerifications.map((v) => (
-                <VerificationItem
-                  key={v.id}
-                  status={v.status}
-                  content={v.problem}
-                  time={v.created_at}
-                />
-              ))
-            )}
-          </div>
+
+          {recentVerifications.length === 0 ? (
+            <div className="dash-empty">
+              <i className="fa-solid fa-clipboard-check" aria-hidden="true"></i>
+              <p>No verifications yet</p>
+              <span>Rate a fix inside its result and it shows up here.</span>
+            </div>
+          ) : (
+            <ul className="dash-list">
+              {recentVerifications.map((v) => (
+                <li key={v.id}>
+                  <VerificationRow status={v.status} content={v.problem} time={v.created_at} />
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       </div>
     </div>
   )
 }
 
-function StatCard({ label, value, icon, color, trend, trendColor }) {
-  const colorStyles = {
-    blue: { bg: 'blue-500', border: 'blue-400', text: 'blue-300', glow: 'rgba(59, 130, 246, 0.3)' },
-    indigo: { bg: 'indigo-500', border: 'indigo-400', text: 'indigo-300', glow: 'rgba(99, 102, 241, 0.3)' },
-    emerald: { bg: 'emerald-500', border: 'emerald-400', text: 'emerald-300', glow: 'rgba(16, 185, 129, 0.3)' },
-    rose: { bg: 'rose-500', border: 'rose-400', text: 'rose-300', glow: 'rgba(251, 113, 133, 0.3)' }
-  }
-
-  const c = colorStyles[color]
-  const trendStyles = {
-    emerald: 'text-emerald-300',
-    indigo: 'text-indigo-300',
-    rose: 'text-rose-300',
-    slate: 'text-slate-300'
-  }
-
+function StatTile({ label, value, icon, color, hint, onOpen }) {
   return (
-    <div className="stat-card glass-panel tilt-card">
-      <div className="card-header">
-        <span className="card-label">{label}</span>
-        <div className={`card-icon card-icon-${color}`}>
-          <i className={`fa-solid ${icon} icon-${color}`}></i>
-        </div>
-      </div>
-      <div className="card-body">
-        <span className="card-value font-mono">{value}</span>
-        <span className={`card-trend ${trendStyles[trendColor]}`}>
-          <i className={`fa-solid ${trendColor === 'rose' && trendColor !== 'emerald' ? 'fa-triangle-exclamation' : 'fa-arrow-up'}`}></i>
-          {trend}
-        </span>
-      </div>
-      <div className={`card-glow card-glow-${color}`} />
-    </div>
+    <button type="button" className={`dash-stat dash-stat--${color}`} onClick={onOpen}>
+      <span className="dash-stat__icon">
+        <i className={`fa-solid ${icon}`} aria-hidden="true"></i>
+      </span>
+      <span className="dash-stat__label">{label}</span>
+      <span className="dash-stat__value">{value}</span>
+      <span className="dash-stat__hint">
+        {hint}
+        <i className="fa-solid fa-arrow-right" aria-hidden="true"></i>
+      </span>
+      <span className="dash-stat__shine" aria-hidden="true"></span>
+    </button>
   )
 }
 
-function ActivityItem({ category, content, time }) {
-  const categoryColors = {
-    'General': 'indigo',
-    'Database': 'purple',
-    'Code Fix': 'cyan',
-    'DevOps': 'orange',
-    'Troubleshooting': 'blue'
-  }
-  const catColor = categoryColors[category] || 'indigo'
-
-  return (
-    <div className="activity-item glass-item">
-      <span className={`activity-tag ${catColor}`}>{category}</span>
-      <p className="activity-content">{content}</p>
-      <span className="activity-time">{formatTime(time)}</span>
-    </div>
-  )
+const STATUS = {
+  success: { label: 'Verified', icon: 'fa-check', color: 'emerald' },
+  failed: { label: 'Failed', icon: 'fa-xmark', color: 'rose' },
+  partial: { label: 'Partial', icon: 'fa-circle-half-stroke', color: 'amber' }
 }
 
-function VerificationItem({ status, content, time }) {
-  const statusConfig = {
-    success: { color: 'emerald', icon: 'fa-check-circle', label: 'Verified' },
-    failed: { color: 'rose', icon: 'fa-xmark-circle', label: 'Failed' },
-    partial: { color: 'amber', icon: 'fa-circle-half-stroke', label: 'Partial' }
-  }
-  const config = statusConfig[status] || statusConfig.failed
+function VerificationRow({ status, content, time }) {
+  const config = STATUS[status] || STATUS.failed
 
+  // Verifications have no detail page of their own, so the row links to the
+  // history list rather than pretending to open something.
   return (
-    <div className="verification-item glass-item">
-      <span className={`verification-badge ${config.color}`}>
-        <i className={`fa-solid ${config.icon}`}></i>
+    <div className={`dash-row dash-row--static dash-row--${config.color}`}>
+      <span className="dash-row__status">
+        <i className={`fa-solid ${config.icon}`} aria-hidden="true"></i>
         {config.label}
       </span>
-      <p className="verification-content">{content}</p>
-      <span className="verification-time">{formatTime(time)}</span>
+      <span className="dash-row__text">{content}</span>
+      <span className="dash-row__time">{formatTime(time)}</span>
     </div>
   )
 }
