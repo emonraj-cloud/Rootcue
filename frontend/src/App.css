@@ -4299,3 +4299,28 @@ body {
 @media (max-width: 1080px) {
   .tool-tiles { grid-template-columns: 1fr; }
 }
+
+/* ---------- greeting title row + crystal icon ---------- */
+.greeting-title-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.greeting-icon {
+  width: 42px;
+  height: 42px;
+  flex: none;
+  animation: ci-float 5s ease-in-out infinite;
+}
+
+@keyframes ci-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-4px) rotate(4deg); }
+}
+
+@media (max-width: 620px) {
+  .greeting-icon { width: 34px; height: 34px; }
+  .greeting-title-row { gap: 10px; }
+}
