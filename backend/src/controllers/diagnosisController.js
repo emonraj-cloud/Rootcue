@@ -4,7 +4,7 @@ import { recordAudit } from '../services/auditLogger.js'
 
 export async function createDiagnosis(req, res) {
   try {
-    const { problem, projectId } = req.body
+    const { problem } = req.body
 
     // `if (!problem)` let a whitespace-only string through: the model was
     // asked to diagnose nothing, answered "No problem description was
@@ -13,6 +13,25 @@ export async function createDiagnosis(req, res) {
 
     if (!text) {
       return res.status(400).json({ success: false, message: 'problem is required' })
+    }
+
+    // The projectId went straight into the insert with no ownership check, so
+    // any user could attach a diagnosis to somebody else's project by passing
+    // its id. Verified: it returned 200 and wrote a row pointing at a
+    // project owned by a different user.
+    let projectId = null
+    if (req.body.projectId !== undefined && req.body.projectId !== null && req.body.projectId !== '') {
+      if (!isValidUuid(req.body.projectId)) {
+        return res.status(400).json({ success: false, message: 'projectId must be a valid project id' })
+      }
+      const owned = await pool.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [
+        req.body.projectId,
+        req.user.id
+      ])
+      if (owned.rows.length === 0) {
+        return res.status(404).json({ success: false, message: 'Project not found' })
+      }
+      projectId = owned.rows[0].id
     }
 
     const diagnosis = await runOrchestrator(text, req.user.id)
@@ -177,6 +196,42 @@ export async function deleteDiagnosis(req, res) {
   } catch (err) {
     console.error('Delete diagnosis error:', err.message)
     res.status(500).json({ success: false, message: 'Something went wrong while deleting the diagnosis' })
+  }
+}
+
+export async function getProjectDiagnoses(req, res) {
+  try {
+    if (!isValidUuid(req.params.id)) {
+      return res.status(400).json({ success: false, message: 'Project id is not a valid id' })
+    }
+
+    const owned = await pool.query('SELECT id FROM projects WHERE id = $1 AND user_id = $2', [
+      req.params.id,
+      req.user.id
+    ])
+    if (owned.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Project not found' })
+    }
+
+    const result = await pool.query(
+      `SELECT d.id, d.agent_used, d.problem, d.created_at, v.status AS outcome
+       FROM diagnoses d
+       LEFT JOIN LATERAL (
+         SELECT vv.status FROM verifications vv
+         WHERE vv.diagnosis_id = d.id
+         ORDER BY vv.created_at DESC
+         LIMIT 1
+       ) v ON TRUE
+       WHERE d.project_id = $1
+       ORDER BY d.created_at DESC
+       LIMIT 100`,
+      [req.params.id]
+    )
+
+    res.json({ success: true, diagnoses: result.rows })
+  } catch (err) {
+    console.error('Get project diagnoses error:', err.message)
+    res.status(500).json({ success: false, message: 'Something went wrong while fetching the project history' })
   }
 }
 

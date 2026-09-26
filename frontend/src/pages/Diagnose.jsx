@@ -47,7 +47,8 @@ export default function Diagnose() {
 
   const [problem, setProblem] = useState(searchParams.get('problem') || '')
   const [projects, setProjects] = useState([])
-  const [projectId, setProjectId] = useState('')
+  // Pre-selected when arriving from a project's "Diagnose in this project".
+  const [projectId, setProjectId] = useState(searchParams.get('project') || '')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [rawResponse, setRawResponse] = useState('')
@@ -66,7 +67,17 @@ export default function Diagnose() {
   const resultRef = useRef(null)
 
   useEffect(() => {
-    api.get('/api/projects').then((data) => setProjects(data.projects)).catch(() => {})
+    api
+      .get('/api/projects')
+      .then((data) => {
+        setProjects(data.projects)
+        // A ?project= that is not in the list is stale or belongs to someone
+        // else. Dropping it beats submitting and getting a 404 back.
+        setProjectId((current) =>
+          current && data.projects.some((p) => p.id === current) ? current : ''
+        )
+      })
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
