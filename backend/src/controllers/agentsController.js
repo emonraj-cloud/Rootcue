@@ -8,12 +8,37 @@ export async function codeAgentHandler(req, res) {
   try {
     const { code, error } = req.body
 
-    if (!code || !error) {
+    // A whitespace-only paste passes a truthiness check, which sent the model
+    // off to fix a blank file and stored "there is no bug" as an answer.
+    const codeText = typeof code === 'string' ? code.trim() : ''
+    const errorText = typeof error === 'string' ? error.trim() : ''
+
+    if (!codeText || !errorText) {
       return res.status(400).json({ success: false, message: 'code and error are required' })
     }
 
-    const result = await runCodeFixAgent(code, error)
-    res.json({ success: true, result })
+    const result = await runCodeFixAgent(codeText, errorText)
+
+    // Saved like the other two agents so a fix shows up in History, counts on
+    // the dashboard and can be verified.
+    let diagnosisId = null
+    try {
+      const saved = await pool.query(
+        `INSERT INTO diagnoses (user_id, agent_used, problem, result)
+         VALUES ($1, 'code', $2, $3)
+         RETURNING id`,
+        [
+          req.user.id,
+          result.problem || 'Code fix',
+          JSON.stringify({ ...result, submittedCode: codeText, submittedError: errorText })
+        ]
+      )
+      diagnosisId = saved.rows[0].id
+    } catch (saveErr) {
+      console.error('Could not save code diagnosis:', saveErr.message)
+    }
+
+    res.json({ success: true, result, diagnosisId })
   } catch (err) {
     console.error('Code agent error:', err.message, '| rawResponse:', JSON.stringify(err.rawResponse))
 
