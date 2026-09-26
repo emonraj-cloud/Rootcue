@@ -4308,19 +4308,35 @@ body {
   flex-wrap: wrap;
 }
 
-.greeting-icon {
-  width: 42px;
-  height: 42px;
-  flex: none;
-  animation: ci-float 5s ease-in-out infinite;
+@media (max-width: 620px) {
+  .greeting-title-row { gap: 10px; }
 }
 
-@keyframes ci-float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-4px) rotate(4deg); }
+/* ---------- robot icon beside the greeting ---------- */
+.robot-icon {
+  width: 46px;
+  height: 46px;
+  flex: none;
+  display: block;
+  animation: ri-float 5s ease-in-out infinite;
+  transition: transform 0.2s ease;
+}
+
+.greeting-title-row:hover .robot-icon {
+  transform: scale(1.06);
+}
+
+@keyframes ri-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .robot-icon { animation: none; }
+  .greeting-title-row:hover .robot-icon { transform: none; }
 }
 
 @media (max-width: 620px) {
-  .greeting-icon { width: 34px; height: 34px; }
+  .robot-icon { width: 36px; height: 36px; }
   .greeting-title-row { gap: 10px; }
 }

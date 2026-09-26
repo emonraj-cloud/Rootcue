@@ -1,5 +1,5 @@
 import { useAuth } from '../context/AuthContext.jsx'
-import CrystalIcon from './CrystalIcon.jsx'
+import RobotIcon from './RobotIcon.jsx'
 
 // Morning 5:00-11:59, afternoon 12:00-16:59, evening 17:00-20:59, night 21:00-04:59.
 function getGreeting(date = new Date()) {
@@ -31,7 +31,7 @@ export default function Greeting() {
             {greeting}
             {firstName ? <span className="greeting-name">, {firstName}</span> : null}
           </h1>
-          <CrystalIcon className="greeting-icon" />
+          <RobotIcon className="greeting-icon" />
         </div>
         <p className="greeting-sub">{SUBLINES[greeting]}</p>
       </div>
