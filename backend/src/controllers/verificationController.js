@@ -1,4 +1,5 @@
 import pool from '../config/database.js'
+import { recordAudit } from '../services/auditLogger.js'
 
 const ALLOWED_STATUSES = ['success', 'failed', 'partial']
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -51,6 +52,12 @@ export async function createVerification(req, res) {
     )
 
     res.status(201).json({ success: true, verification: result.rows[0] })
+    recordAudit(req, {
+      action: 'verify',
+      resourceType: 'verification',
+      resourceId: result.rows[0].id,
+      details: { status, diagnosisId: linkedDiagnosisId || null }
+    })
   } catch (err) {
     console.error('Create verification error:', err.message)
 

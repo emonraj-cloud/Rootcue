@@ -1,5 +1,6 @@
 import pool from '../config/database.js'
 import { runOrchestrator } from '../agents/orchestrator.js'
+import { recordAudit } from '../services/auditLogger.js'
 
 export async function createDiagnosis(req, res) {
   try {
@@ -21,6 +22,13 @@ export async function createDiagnosis(req, res) {
       diagnosisId: saveResult.rows[0].id,
       createdAt: saveResult.rows[0].created_at,
       diagnosis
+    })
+
+    recordAudit(req, {
+      action: 'diagnose',
+      resourceType: 'diagnosis',
+      resourceId: saveResult.rows[0].id,
+      details: { agentUsed: diagnosis.agentUsed, projectId: projectId || null, characters: problem.length }
     })
   } catch (err) {
     console.error('Diagnosis error:', err.message)

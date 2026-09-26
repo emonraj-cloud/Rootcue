@@ -1,6 +1,7 @@
 import express from 'express'
 import pool from '../config/database.js'
 import { protect } from '../middleware/authMiddleware.js'
+import { recordAudit } from '../services/auditLogger.js'
 
 const router = express.Router()
 
@@ -93,6 +94,13 @@ router.post('/', protect, async (req, res) => {
     )
 
     res.status(201).json({ success: true, credential: result.rows[0] })
+    recordAudit(req, {
+      action: 'create',
+      resourceType: 'credential',
+      resourceId: result.rows[0].id,
+      // The secret is deliberately not recorded.
+      details: { name: String(name).trim(), type }
+    })
   } catch (err) {
     console.error('Credential create error:', err.message)
     res.status(500).json({ success: false, message: 'Failed to create credential' })
@@ -127,6 +135,12 @@ router.patch('/:id', protect, async (req, res) => {
     )
 
     res.json({ success: true, credential: updated.rows[0] })
+    recordAudit(req, {
+      action: 'update',
+      resourceType: 'credential',
+      resourceId: req.params.id,
+      details: { isActive }
+    })
   } catch (err) {
     console.error('Credential update error:', err.message)
     res.status(500).json({ success: false, message: 'Failed to update credential' })
@@ -145,6 +159,7 @@ router.delete('/:id', protect, async (req, res) => {
     }
 
     res.json({ success: true })
+    recordAudit(req, { action: 'delete', resourceType: 'credential', resourceId: req.params.id })
   } catch (err) {
     console.error('Credential delete error:', err.message)
     res.status(500).json({ success: false, message: 'Failed to delete credential' })

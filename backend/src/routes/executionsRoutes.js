@@ -2,6 +2,7 @@ import express from 'express'
 import pool from '../config/database.js'
 import { protect } from '../middleware/authMiddleware.js'
 import { runOrchestrator } from '../agents/orchestrator.js'
+import { recordAudit } from '../services/auditLogger.js'
 
 const router = express.Router()
 
@@ -94,6 +95,13 @@ router.post('/', protect, async (req, res) => {
     )
     const executionId = execution.rows[0].id
 
+    recordAudit(req, {
+      action: 'run',
+      resourceType: 'agent',
+      resourceId: agentId,
+      details: { executionId, agent: agent.rows[0].name, characters: text.length }
+    })
+
     const step = await pool.query(
       `INSERT INTO execution_steps
          (execution_id, node_id, step_type, name, input, status, started_at, created_at)
@@ -140,6 +148,13 @@ router.post('/', protect, async (req, res) => {
 
       // The run is recorded and its failure is the answer, so this is a 200
       // with status 'failed' rather than an error response that hides the row.
+      recordAudit(req, {
+        action: 'run',
+        resourceType: 'execution',
+        resourceId: executionId,
+        details: { status: 'failed', durationMs, error: err.message }
+      })
+
       return res.status(201).json({ success: true, execution: failed.rows[0] })
     }
 
@@ -171,6 +186,13 @@ router.post('/', protect, async (req, res) => {
     )
 
     const steps = await pool.query(STEP_QUERY, [executionId])
+
+    recordAudit(req, {
+      action: 'run',
+      resourceType: 'execution',
+      resourceId: executionId,
+      details: { status: 'success', durationMs, agent: output.agentUsed || null }
+    })
 
     res.status(201).json({ success: true, execution: finished.rows[0], steps: steps.rows })
   } catch (err) {
@@ -255,6 +277,7 @@ router.delete('/:id', protect, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Execution not found' })
     }
     res.json({ success: true })
+    recordAudit(req, { action: 'delete', resourceType: 'execution', resourceId: req.params.id })
   } catch (err) {
     console.error('Execution delete error:', err.message)
     res.status(500).json({ success: false, message: 'Failed to delete execution' })

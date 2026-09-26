@@ -2,6 +2,7 @@ import express from 'express'
 import pool from '../config/database.js'
 import { protect } from '../middleware/authMiddleware.js'
 import { runOrchestrator } from '../agents/orchestrator.js'
+import { recordAudit } from '../services/auditLogger.js'
 
 const router = express.Router()
 
@@ -113,6 +114,12 @@ router.post('/', protect, async (req, res) => {
     )
 
     res.status(201).json({ success: true, conversation: result.rows[0] })
+    recordAudit(req, {
+      action: 'create',
+      resourceType: 'conversation',
+      resourceId: result.rows[0].id,
+      details: { name: result.rows[0].name, agentId }
+    })
   } catch (err) {
     console.error('Conversation create error:', err.message)
     res.status(500).json({ success: false, message: 'Failed to create conversation' })
@@ -194,6 +201,13 @@ router.post('/:id/messages', protect, async (req, res) => {
       reply: assistantMessage.rows[0],
       agentUsed: diagnosis.agentUsed
     })
+
+    recordAudit(req, {
+      action: 'message',
+      resourceType: 'conversation',
+      resourceId: conversationId,
+      details: { agentUsed: diagnosis.agentUsed, characters: text.length }
+    })
   } catch (err) {
     console.error('Conversation message error:', err.message)
     res.status(500).json({ success: false, message: 'Failed to send message' })
@@ -231,6 +245,12 @@ router.patch('/:id', protect, async (req, res) => {
     }
 
     res.json({ success: true, conversation: result.rows[0] })
+    recordAudit(req, {
+      action: 'update',
+      resourceType: 'conversation',
+      resourceId: req.params.id,
+      details: { name: result.rows[0].name, status: result.rows[0].status }
+    })
   } catch (err) {
     console.error('Conversation update error:', err.message)
     res.status(500).json({ success: false, message: 'Failed to update conversation' })
@@ -249,6 +269,7 @@ router.delete('/:id', protect, async (req, res) => {
     }
 
     res.json({ success: true })
+    recordAudit(req, { action: 'delete', resourceType: 'conversation', resourceId: req.params.id })
   } catch (err) {
     console.error('Conversation delete error:', err.message)
     res.status(500).json({ success: false, message: 'Failed to delete conversation' })
