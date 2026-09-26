@@ -4370,3 +4370,30 @@ body {
   .greeting { gap: 12px; }
   .greeting-clock { align-self: flex-start; }
 }
+/* ---------- centered variant: robot alone above the tool tiles ---------- */
+.ask-ai-hero--centered {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  gap: 18px;
+}
+
+.ask-ai-hero--centered .ask-ai-hero__robot {
+  width: 100%;
+  max-width: 300px;
+  padding: 14px 6px 6px;
+}
+
+.ask-ai-hero--centered .ask-ai-hero__robot .crystal-robot {
+  max-width: 260px;
+}
+
+.ask-ai-hero--centered .tool-tiles {
+  grid-column: 1;
+  width: 100%;
+  margin-top: 0;
+}
+
+@media (max-width: 1080px) {
+  .ask-ai-hero--centered .ask-ai-hero__robot { max-width: 230px; }
+  .ask-ai-hero--centered .ask-ai-hero__robot .crystal-robot { max-width: 200px; }
+}

@@ -4,8 +4,6 @@ import { api } from '../api/client.js'
 import Greeting from '../components/Greeting.jsx'
 import CrystalRobot from '../components/CrystalRobot.jsx'
 
-const N8N_WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL || 'http://localhost:5678/webhook/askai'
-
 // The three things a user actually comes here to do. Each one hands the
 // typed question straight to the matching tool.
 const TOOLS = [
@@ -40,10 +38,6 @@ export default function Dashboard() {
   const [stats, setStats] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
-  const [askQuery, setAskQuery] = useState('')
-  const [diagnosisResult, setDiagnosisResult] = useState(null)
-  const [submitError, setSubmitError] = useState('')
-  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     api
@@ -52,35 +46,6 @@ export default function Dashboard() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
   }, [])
-
-  async function handleAskAI(e) {
-    e.preventDefault()
-    if (!askQuery.trim()) return
-    setSubmitting(true)
-    setSubmitError('')
-    setDiagnosisResult(null)
-    try {
-      const token = localStorage.getItem('techpilot_token')
-      const response = await fetch(N8N_WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token,
-          problem: askQuery,
-          projectId: null
-        })
-      })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to get diagnosis')
-      }
-      setDiagnosisResult(data)
-    } catch (err) {
-      setSubmitError(err.message)
-    } finally {
-      setSubmitting(false)
-    }
-  }
 
   if (loading) {
     return (
@@ -173,65 +138,10 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <section className="ask-ai-hero">
+      <section className="ask-ai-hero ask-ai-hero--centered">
         <div className="ask-ai-hero__robot" aria-hidden="true">
           <CrystalRobot />
           <div className="ask-ai-hero__pulse" />
-        </div>
-
-        <div className="ask-ai-section contact-card">
-          <div className="contact-header">
-            <i className="fa-solid fa-message-dot contact-icon"></i>
-            <div>
-              <h2 className="contact-title">Ask AI</h2>
-              <p className="contact-desc">Describe your problem and get an AI-powered diagnosis</p>
-            </div>
-          </div>
-
-        <form className="contact-form" onSubmit={handleAskAI}>
-          <textarea
-            placeholder="e.g. PostgreSQL connection refused on port 5432"
-            value={askQuery}
-            onChange={(e) => setAskQuery(e.target.value)}
-            className="contact-input"
-            rows="3"
-          />
-          <button type="submit" className="contact-btn">
-            {submitting ? 'Analyzing...' : <>
-              <i className="fa-solid fa-paper-plane"></i>
-              Ask AI
-            </>}
-          </button>
-        </form>
-        {submitting && (
-          <div className="contact-loading">
-            <i className="fa-solid fa-robot"></i>
-            <span>AI is analyzing your problem...</span>
-          </div>
-        )}
-        {submitError && (
-          <div className="contact-error">
-            <i className="fa-solid fa-triangle-exclamation"></i>
-            <span>{submitError}</span>
-          </div>
-        )}
-        {diagnosisResult && (
-          <div className="contact-result">
-            <div className="result-header">
-              <i className="fa-solid fa-check-circle"></i>
-              <h3>AI Diagnosis Complete</h3>
-            </div>
-            <div className="result-content">
-              <p>{diagnosisResult.diagnosis?.rootCause}</p>
-            </div>
-            <button
-              className="contact-btn contact-btn--secondary"
-              onClick={() => navigate(`/diagnose?problem=${encodeURIComponent(askQuery)}`)}
-            >
-              View Full Diagnosis
-            </button>
-          </div>
-        )}
         </div>
 
         <div className="tool-tiles">
