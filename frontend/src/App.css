@@ -1735,6 +1735,17 @@ body:not(.dark) .main-content h2,
 
 /* ========== BLACK TEXT OVERRIDE ========== */
 
+/* Dark mode never had a background of its own. `.main-content` is pinned to
+   #f8fafc near the top of this file, so every `dark:` colour — white headings,
+   gray-400 captions — rendered as pale text on a near-white panel. On the
+   Providers page that meant "Anthropic / Not connected" was there in the DOM
+   and completely invisible. The page looked empty. */
+.dark .main-content {
+  background:
+    radial-gradient(circle at 12% 0%, #1e1b4b 0%, #0f172a 55%, #020617 100%) !important;
+  color: #e2e8f0;
+}
+
 /* Make all text in main content black.
    Scoped to light mode on purpose: an unscoped `!important` also beat
    every .dark override further down the file, which is why dark mode
@@ -1769,9 +1780,11 @@ body.dark {
   color: white !important;
 }
 
-/* Lighten all glass panels for black text readability */
-.glass-panel,
-.glass-item {
+/* Lighten all glass panels for black text readability.
+   Scoped to light mode: with dark mode now getting a real dark background,
+   a forced-white panel would put the dark-mode text colour on white. */
+body:not(.dark) .glass-panel,
+body:not(.dark) .glass-item {
   background: rgba(255, 255, 255, 0.9) !important;
   border: 1px solid #e5e7eb !important;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06) !important;
@@ -1779,11 +1792,24 @@ body.dark {
   -webkit-backdrop-filter: none !important;
 }
 
+.dark .glass-panel,
+.dark .glass-item {
+  background: rgba(30, 41, 59, 0.7) !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  box-shadow: 0 18px 36px -20px rgba(2, 6, 23, 0.9) !important;
+}
+
 /* Stat cards: white background, black text */
-.stat-card {
+body:not(.dark) .stat-card {
   background: rgba(255, 255, 255, 0.95) !important;
   border: 1px solid #e5e7eb !important;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06) !important;
+}
+
+.dark .stat-card {
+  background: rgba(30, 41, 59, 0.72) !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  box-shadow: 0 18px 36px -20px rgba(2, 6, 23, 0.9) !important;
 }
 
 /* ===== Floating Ask AI Widget — Modern AI Agent Style ===== */
