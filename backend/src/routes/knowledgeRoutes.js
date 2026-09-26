@@ -2,6 +2,9 @@ import express from 'express'
 import {
   createKnowledgeDocument,
   listKnowledgeDocuments,
+  getKnowledgeDocument,
+  deleteKnowledgeDocument,
+  updateKnowledgeDocument,
   searchKnowledge,
   uploadKnowledgeFile
 } from '../controllers/knowledgeController.js'
@@ -11,6 +14,9 @@ const router = express.Router()
 
 router.post('/', createKnowledgeDocument)
 router.get('/', listKnowledgeDocuments)
+router.get('/:id', getKnowledgeDocument)
+router.put('/:id', updateKnowledgeDocument)
+router.delete('/:id', deleteKnowledgeDocument)
 router.post('/search', searchKnowledge)
 router.post('/upload-file', (req, res, next) => {
   uploadKnowledgeFileMiddleware.single('file')(req, res, (err) => {
