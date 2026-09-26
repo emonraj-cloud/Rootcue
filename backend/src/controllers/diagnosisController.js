@@ -6,15 +6,20 @@ export async function createDiagnosis(req, res) {
   try {
     const { problem, projectId } = req.body
 
-    if (!problem) {
+    // `if (!problem)` let a whitespace-only string through: the model was
+    // asked to diagnose nothing, answered "No problem description was
+    // provided by the user", and that was stored as a real diagnosis.
+    const text = typeof problem === 'string' ? problem.trim() : ''
+
+    if (!text) {
       return res.status(400).json({ success: false, message: 'problem is required' })
     }
 
-    const diagnosis = await runOrchestrator(problem, req.user.id)
+    const diagnosis = await runOrchestrator(text, req.user.id)
 
     const saveResult = await pool.query(
       'INSERT INTO diagnoses (user_id, project_id, agent_used, problem, result) VALUES ($1, $2, $3, $4, $5) RETURNING id, created_at',
-      [req.user.id, projectId || null, diagnosis.agentUsed, problem, JSON.stringify(diagnosis)]
+      [req.user.id, projectId || null, diagnosis.agentUsed, text, JSON.stringify(diagnosis)]
     )
 
     res.json({
@@ -28,7 +33,7 @@ export async function createDiagnosis(req, res) {
       action: 'diagnose',
       resourceType: 'diagnosis',
       resourceId: saveResult.rows[0].id,
-      details: { agentUsed: diagnosis.agentUsed, projectId: projectId || null, characters: problem.length }
+      details: { agentUsed: diagnosis.agentUsed, projectId: projectId || null, characters: text.length }
     })
   } catch (err) {
     console.error('Diagnosis error:', err.message)
