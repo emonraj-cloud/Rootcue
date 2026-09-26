@@ -21,6 +21,7 @@ import logsRoutes from './routes/logsRoutes.js'
 import apiKeysRoutes from './routes/apiKeysRoutes.js'
 import templatesRoutes from './routes/templatesRoutes.js'
 import { protect } from './middleware/authMiddleware.js'
+import { apiKeyAuth } from './middleware/apiKeyAuth.js'
 import { apiLimiter } from './middleware/rateLimiter.js'
 
 dotenv.config()
@@ -58,6 +59,19 @@ app.get('/api/health', (req, res) => {
   res.json({
     success: true,
     message: 'NEXORA AI backend is running'
+  })
+})
+
+// Key-authenticated self check. This is the only route that uses apiKeyAuth
+// so far: it exists so a key created in the UI can be proven to work over the
+// real authentication path, and it stamps last_used_at the way any future
+// key-authenticated route will.
+app.get('/api/whoami', apiKeyAuth, (req, res) => {
+  res.json({
+    success: true,
+    authenticatedBy: 'api_key',
+    key: { id: req.apiKey.id, name: req.apiKey.name, permissions: req.apiKey.permissions },
+    workspaceId: req.apiKey.workspaceId
   })
 })
 
