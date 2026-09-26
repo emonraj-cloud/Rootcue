@@ -4,11 +4,24 @@ import { parseAiJson } from '../utils/parseAiJson.js'
 const STRICTLY_REQUIRED_FIELDS = ['problem', 'rootCause', 'confidence', 'solution']
 const LIST_FIELDS_WITH_DEFAULTS = ['evidence', 'steps', 'verification', 'warnings']
 
-function buildPrompt() {
+// The image alone rarely says enough: an error dialog means completely
+// different things for a web app, a database client and a mobile build. The
+// user can supply that missing context, and it is folded into the prompt so
+// the model stops guessing between them.
+function buildPrompt(context = '') {
+  const contextSection = context
+    ? `
+Extra context from the person who took the screenshot. Treat it as reliable background and use it to disambiguate what you see:
+---
+${context}
+---
+`
+    : ''
+
   return `You are an expert IT support engineer looking at a screenshot of a computer showing an error or problem.
 
 Look at the image carefully and identify what IT problem it shows.
-
+${contextSection}
 Respond with ONLY a single valid JSON object. No markdown, no code fences, no text before or after it. The JSON object must have exactly these fields:
 
 {
@@ -23,8 +36,8 @@ Respond with ONLY a single valid JSON object. No markdown, no code fences, no te
 }`
 }
 
-export async function runVisualAgent(base64Image, maxAttempts = 3) {
-  const prompt = buildPrompt()
+export async function runVisualAgent(base64Image, context = '', maxAttempts = 3) {
+  const prompt = buildPrompt(context)
   let lastError
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {

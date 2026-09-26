@@ -72,6 +72,12 @@ export default function DiagnosisResultView({ result }) {
         )}
       </div>
 
+      {result.userContext && (
+        <Section title="Context you supplied" icon="fa-comment" tone="cause">
+          <p className="dx-problem-text">{result.userContext}</p>
+        </Section>
+      )}
+
       {result.problem && (
         <Section title="Problem" icon="fa-circle-question" tone="problem">
           <p className="dx-problem-text">{result.problem}</p>

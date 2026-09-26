@@ -35,9 +35,12 @@ export default function DiagnosisDetail() {
 
       {diagnosis && (
         <>
-          <p className="history-date">
-            {new Date(diagnosis.created_at).toLocaleString()}
-          </p>
+          <div className="detail-head">
+            <span className="tag">{diagnosis.agent_used || 'general'}</span>
+            <span className="history-date">
+              {new Date(diagnosis.created_at).toLocaleString()}
+            </span>
+          </div>
           <DiagnosisResultView result={diagnosis.result} />
 
           <div className="detail-verify-section">
