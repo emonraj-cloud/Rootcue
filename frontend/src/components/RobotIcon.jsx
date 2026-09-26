@@ -1,10 +1,10 @@
-// Clean, professional robot head icon. Inline SVG so it stays sharp at
-// any size, needs no image file, and weighs nothing.
+// Full-body robot drawn for small sizes: bold silhouette, high contrast,
+// minimal interior detail so it stays readable around 46px tall.
 export default function RobotIcon({ className = '' }) {
   return (
     <svg
       className={`robot-icon ${className}`}
-      viewBox="0 0 64 64"
+      viewBox="0 0 64 96"
       role="img"
       aria-label="AI Robot Assistant"
     >
@@ -12,28 +12,29 @@ export default function RobotIcon({ className = '' }) {
         <linearGradient id="ri-shell" x1="0.2" y1="0" x2="0.8" y2="1">
           <stop offset="0%" stopColor="#e0e7ff" />
           <stop offset="40%" stopColor="#a5b4fc" />
-          <stop offset="75%" stopColor="#818cf8" />
+          <stop offset="78%" stopColor="#818cf8" />
           <stop offset="100%" stopColor="#6366f1" />
         </linearGradient>
 
-        <linearGradient id="ri-face" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#1e1b4b" />
-          <stop offset="100%" stopColor="#312e81" />
+        <linearGradient id="ri-body" x1="0" y1="0" x2="0.8" y2="1">
+          <stop offset="0%" stopColor="#a5b4fc" />
+          <stop offset="60%" stopColor="#6366f1" />
+          <stop offset="100%" stopColor="#7c3aed" />
+        </linearGradient>
+
+        <linearGradient id="ri-limb" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#c7d2fe" />
+          <stop offset="100%" stopColor="#6366f1" />
         </linearGradient>
 
         <linearGradient id="ri-eye" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#a5f3fc" />
-          <stop offset="55%" stopColor="#22d3ee" />
+          <stop offset="60%" stopColor="#22d3ee" />
           <stop offset="100%" stopColor="#0891b2" />
         </linearGradient>
 
-        <linearGradient id="ri-metal" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#94a3b8" />
-          <stop offset="100%" stopColor="#64748b" />
-        </linearGradient>
-
-        <filter id="ri-glow" x="-60%" y="-60%" width="220%" height="220%">
-          <feGaussianBlur stdDeviation="1.8" result="b" />
+        <filter id="ri-glow" x="-70%" y="-70%" width="240%" height="240%">
+          <feGaussianBlur stdDeviation="1.5" result="b" />
           <feMerge>
             <feMergeNode in="b" />
             <feMergeNode in="SourceGraphic" />
@@ -41,48 +42,67 @@ export default function RobotIcon({ className = '' }) {
         </filter>
       </defs>
 
-      {/* soft ambient glow behind the head */}
-      <circle cx="32" cy="34" r="24" fill="#6366f1" fillOpacity="0.12" />
+      {/* soft halo so it lifts off both light and dark backgrounds */}
+      <ellipse cx="32" cy="50" rx="30" ry="44" fill="#6366f1" fillOpacity="0.12" />
 
-      {/* antenna */}
+      {/* ---------- antenna ---------- */}
       <g filter="url(#ri-glow)">
-        <line x1="32" y1="17" x2="32" y2="9" stroke="url(#ri-metal)" strokeWidth="2.5" strokeLinecap="round" />
-        <circle cx="32" cy="7" r="3.4" fill="url(#ri-eye)" />
+        <line x1="32" y1="11" x2="32" y2="5" stroke="#818cf8" strokeWidth="2.4" strokeLinecap="round" />
+        <circle cx="32" cy="3.4" r="2.6" fill="url(#ri-eye)" />
       </g>
 
-      {/* side ears */}
-      <rect x="8" y="28" width="5" height="13" rx="2.5" fill="url(#ri-metal)" />
-      <rect x="51" y="28" width="5" height="13" rx="2.5" fill="url(#ri-metal)" />
-
-      {/* head shell */}
+      {/* ---------- head ---------- */}
       <rect
-        x="13"
-        y="16"
-        width="38"
-        height="36"
-        rx="10"
+        x="18"
+        y="11"
+        width="28"
+        height="22"
+        rx="6.5"
         fill="url(#ri-shell)"
         stroke="#ffffff"
-        strokeOpacity="0.65"
-        strokeWidth="1.4"
+        strokeOpacity="0.7"
+        strokeWidth="1.3"
       />
-
-      {/* top-left sheen for a little dimension */}
-      <path d="M17 30 Q17 20 27 20 L33 20 Q23 22 22 32 Z" fill="#ffffff" fillOpacity="0.35" />
-
-      {/* face plate */}
-      <rect x="18" y="23" width="28" height="22" rx="7" fill="url(#ri-face)" />
-
+      {/* sheen */}
+      <path d="M22 26 Q22 15 31 15 L35 15 Q25 17 24 28 Z" fill="#ffffff" fillOpacity="0.38" />
       {/* eyes */}
       <g filter="url(#ri-glow)">
-        <rect x="23" y="28" width="6.5" height="8" rx="3.2" fill="url(#ri-eye)" />
-        <rect x="34.5" y="28" width="6.5" height="8" rx="3.2" fill="url(#ri-eye)" />
-        <circle cx="25.4" cy="30" r="1.3" fill="#ffffff" fillOpacity="0.85" />
-        <circle cx="36.9" cy="30" r="1.3" fill="#ffffff" fillOpacity="0.85" />
+        <rect x="24.5" y="18" width="5.5" height="6.5" rx="2.7" fill="url(#ri-eye)" />
+        <rect x="34" y="18" width="5.5" height="6.5" rx="2.7" fill="url(#ri-eye)" />
       </g>
 
-      {/* mouth */}
-      <rect x="26" y="39.5" width="12" height="2.6" rx="1.3" fill="#67e8f9" fillOpacity="0.9" />
+      {/* ---------- neck ---------- */}
+      <rect x="28" y="32" width="8" height="5" fill="#6366f1" />
+
+      {/* ---------- arms ---------- */}
+      <rect x="9.5" y="40" width="7" height="22" rx="3.5" fill="url(#ri-limb)" />
+      <rect x="47.5" y="40" width="7" height="22" rx="3.5" fill="url(#ri-limb)" />
+
+      {/* ---------- torso ---------- */}
+      <rect
+        x="19"
+        y="37"
+        width="26"
+        height="27"
+        rx="7"
+        fill="url(#ri-body)"
+        stroke="#ffffff"
+        strokeOpacity="0.45"
+        strokeWidth="1.2"
+      />
+      {/* chest core */}
+      <g filter="url(#ri-glow)">
+        <circle cx="32" cy="49" r="4.6" fill="#312e81" />
+        <circle cx="32" cy="49" r="2.6" fill="url(#ri-eye)" />
+      </g>
+
+      {/* ---------- legs ---------- */}
+      <rect x="22.5" y="65" width="7.5" height="22" rx="3.7" fill="url(#ri-limb)" />
+      <rect x="34" y="65" width="7.5" height="22" rx="3.7" fill="url(#ri-limb)" />
+
+      {/* ---------- feet ---------- */}
+      <rect x="20" y="86" width="12.5" height="6" rx="3" fill="#4f46e5" />
+      <rect x="31.5" y="86" width="12.5" height="6" rx="3" fill="#4f46e5" />
     </svg>
   )
 }

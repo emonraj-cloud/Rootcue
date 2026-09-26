@@ -4313,14 +4313,17 @@ body {
 }
 
 /* ---------- robot icon beside the greeting ---------- */
+/* The figure is portrait (64x96), so the height drives the size and the
+   width follows the aspect ratio. A fixed width would squash it. */
 .robot-icon {
-  width: 46px;
   height: 46px;
+  width: auto;
   flex: none;
   display: block;
   animation: ri-float 5s ease-in-out infinite;
   transition: transform 0.2s ease;
 }
+
 
 .greeting-title-row:hover .robot-icon {
   transform: scale(1.06);
@@ -4337,6 +4340,6 @@ body {
 }
 
 @media (max-width: 620px) {
-  .robot-icon { width: 36px; height: 36px; }
+  .robot-icon { height: 36px; }
   .greeting-title-row { gap: 10px; }
 }
