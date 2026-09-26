@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client.js'
 import Greeting from '../components/Greeting.jsx'
-import CrystalRobot from '../components/CrystalRobot.jsx'
 
 // The three things a user actually comes here to do. Each one hands the
 // typed question straight to the matching tool.
@@ -138,32 +137,25 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <section className="ask-ai-hero ask-ai-hero--centered">
-        <div className="ask-ai-hero__robot" aria-hidden="true">
-          <CrystalRobot />
-          <div className="ask-ai-hero__pulse" />
-        </div>
-
-        <div className="tool-tiles">
-          {TOOLS.map((tool) => (
-            <button
-              key={tool.key}
-              type="button"
-              className={`tool-tile tool-tile--${tool.color}`}
-              onClick={() => navigate(tool.path)}
-            >
-              <span className="tool-tile__icon">
-                <i className={`fa-solid ${tool.icon}`}></i>
-              </span>
-              <span className="tool-tile__text">
-                <strong>{tool.label}</strong>
-                <small>{tool.hint}</small>
-              </span>
-              <i className="fa-solid fa-chevron-right tool-tile__arrow" aria-hidden="true"></i>
-            </button>
-          ))}
-        </div>
-      </section>
+      <div className="tool-tiles">
+        {TOOLS.map((tool) => (
+          <button
+            key={tool.key}
+            type="button"
+            className={`tool-tile tool-tile--${tool.color}`}
+            onClick={() => navigate(tool.path)}
+          >
+            <span className="tool-tile__icon">
+              <i className={`fa-solid ${tool.icon}`}></i>
+            </span>
+            <span className="tool-tile__text">
+              <strong>{tool.label}</strong>
+              <small>{tool.hint}</small>
+            </span>
+            <i className="fa-solid fa-chevron-right tool-tile__arrow" aria-hidden="true"></i>
+          </button>
+        ))}
+      </div>
 
 
       <div className="sections-grid">
